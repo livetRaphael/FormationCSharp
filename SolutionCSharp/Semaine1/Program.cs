@@ -31,6 +31,10 @@ namespace Semaine1
             Console.WriteLine(RecursiveFactorielle(3));
             Console.WriteLine(RecursiveFactorielle(0));
 
+            DisplayPrimes();
+
+            Console.WriteLine(Gcd(25, 10));
+
             Console.ReadKey();
 
 
@@ -182,7 +186,51 @@ namespace Semaine1
             }
         }
 
+        static bool IsPrime(int value)
+        {
+            bool res = true;
+            int b = 2;
+            while (b <= Math.Sqrt(value)) {
+                if (value % b == 0)
+                {
+                    res = false;
+                }
+                b++;
+            }
+            return res;
+        }
 
+        static void DisplayPrimes()
+        {
+            for (int i = 1; i <= 100 ; i++)
+            {
+                if (IsPrime(i)) {
+                    Console.WriteLine(i);
+                }
+            }
+        }
+
+        static int Gcd(int a, int b)
+        {
+            if (b != 0)
+            {
+                int q = a / b;
+                int r = a % b;
+
+                if (r == 0)
+                {
+                    return b;
+                }
+                else
+                {
+                    return Gcd(b, r);
+                }
+            }
+            else
+            {
+                return -1;
+            }
+        }
 
     }
 }
