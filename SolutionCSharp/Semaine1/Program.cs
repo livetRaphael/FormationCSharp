@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Diagnostics;
 
 namespace Semaine1
 {
@@ -12,21 +16,357 @@ namespace Semaine1
             /*
             Serie1 serie1 = new Serie1();
             serie1.test();
-            */
+            
             Module3 module3 = new Module3();
             module3.test();
 
             Serie2 serie2 = new Serie2();
             serie2.test();
+               
 
+            Module4 module4 = new Module4();
+            module4.test();
+            
+            */
+            Serie3 serie3 = new Serie3();
+            serie3.test();
+            
 
             Console.ReadKey();
 
         }
     }
+    
+    class Serie3
+    {
+        public void test()
+        {
+
+            string url = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\";
+            SchoolMeans(url + "entree.txt", url + "sortie.txt");
 
 
+            int[] array1 = new int[] { 6, 4, 8, 2, 9, 3, 9, 4, 7, 6, 1 };
+            InsertionSort(array1);
+            Module3.displayTabUni(array1);
 
+            int[] array2 = new int[] { 6, 4, 8, 2, 9, 3, 9, 4, 7, 6, 1 };
+            QuickSort(array2);
+            Module3.displayTabUni(array2);
+
+
+            DisplayPerformances(new List<int> {1000, 2000, 5000, 10000, 20000}, 50);
+            
+
+        }
+
+        struct Moyenne
+        {
+            public string nom;
+            public string matiere;
+            public double note;
+
+            public Moyenne(string Nom, string Matiere, double Note)
+            {
+                this.nom = Nom;
+                this.matiere = Matiere;
+                this.note = Note;
+            }
+        }
+
+
+        static void SchoolMeans(string input, string output)
+        {
+            List<Moyenne> moys = new List<Moyenne> { };
+            string[] splitLigne;
+
+            // Lecture de chaque ligne du fichier entrée
+            using (TextReader reader = new StreamReader(input))
+            {
+                string ligne;
+                while ((ligne = reader.ReadLine()) != null && ligne != string.Empty)
+                {
+                    splitLigne = ligne.Split(';');
+                    double note = double.Parse(splitLigne[2], CultureInfo.InvariantCulture);
+                    moys.Add(new Moyenne(splitLigne[0], 
+                                         splitLigne[1], 
+                                         note));
+                }
+            }
+
+            // Traitement des moyennes
+            List<Moyenne> moysMat = new List<Moyenne> { };
+            while (moys.Count != 0)
+            {
+                string currentMat = moys[0].matiere;
+                double somme = 0;
+                int diviseur = 0;
+                for (int i = 0; i < moys.Count; i++)
+                {
+                    
+                    if (moys[i].matiere == currentMat)
+                    {
+                        somme += moys[i].note;
+                        diviseur++;
+                        
+                        moys.Remove(moys[i]);
+                        i--;
+                    }
+                }
+                moysMat.Add(new Moyenne(string.Empty, currentMat, somme / diviseur));
+            }
+
+            // Ecriture de chaque ligne du fichier sortie
+            using (TextWriter writer = new StreamWriter(output))
+            {
+                foreach (Moyenne moyMat in moysMat)
+                {
+                    string format = string.Format("##.0");
+                    string ligne = $"{moyMat.matiere};{moyMat.note.ToString(format).Replace(',','.')}";
+                    writer.WriteLine(ligne);
+                }
+
+                
+                
+            }
+
+            return;
+        }
+
+        static void InsertionSort(int[] array)
+        {
+            int tempValue = 0;
+            int pivot = 0;
+            for (int i = 1; i < array.Length; i++)
+            {
+                int j = i-1;
+                pivot = array[j+1];
+                while (j >= 0 && pivot < array[j])
+                {
+                    tempValue = array[j];
+                    array[j] = pivot;
+                    array[j + 1] = tempValue;
+                    j--;
+                }
+            }
+        }
+
+        static void QuickSort(int[] array)
+        {
+            if (array.Length <= 1)
+            {
+                return;
+            }
+
+            QuickSortRecursive(array, 0, array.Length - 1);
+        }
+
+        static void QuickSortRecursive(int[] array, int low, int high)
+        {
+            if (low < high)
+            {
+                
+                int pivotIndex = Partition(array, low, high);
+
+                QuickSortRecursive(array, low, pivotIndex - 1);
+                QuickSortRecursive(array, pivotIndex + 1, high);
+            }
+        }
+
+        static int Partition(int[] array, int low, int high)
+        {
+            int pivot = array[low];
+            int i = low + 1;
+            int j = high;
+
+            while (i <= j)
+            {
+                while (i <= high && array[i] <= pivot)
+                {
+                    i++;
+                }
+                while (array[j] > pivot)
+                {
+                    j--;
+                }
+                if (i < j)
+                {
+                    Swap(ref array[i], ref array[j]);
+                }
+            }
+            Swap(ref array[low], ref array[j]);
+            return j;
+        }
+
+        static void Swap(ref int a, ref int b)
+        {
+            int temp = a;
+            a = b;
+            b = temp;
+        }
+
+
+        static long UseInsertionSort(int[] array)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            InsertionSort(array);
+            sw.Stop();
+            return sw.ElapsedMilliseconds;
+        }
+
+        static long UseQuickSort(int[] array)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            QuickSort(array);
+            sw.Stop();
+            return sw.ElapsedMilliseconds;
+        }
+
+        static List<int[]> ArraysGenerator(int size)
+        {
+            int[] tab1 = new int[size];
+            int[] tab2 = new int[size];
+            Random rnd = new Random();
+
+            for (int i = 0; i < size; i++)
+            {
+                tab1[i] = rnd.Next(-1000, 1001);
+                tab2[i] = tab1[i];
+            }
+            return new List<int[]> { tab1, tab2 };
+        }
+
+        struct SortData
+        {
+            public double insertionMean;
+            public double insertionStd;
+            public double quickMean;
+            public double quickStd;
+
+            public SortData(double InsertionMean, double InsertionStd, double QuickMean, double QuickStd)
+            {
+                this.insertionMean = InsertionMean;
+                this.insertionStd = InsertionStd;
+                this.quickMean = QuickMean;
+                this.quickStd = QuickStd;
+
+            }
+        }
+
+        static SortData PerformanceTest(int size, int count)
+        {
+            SortData result = new SortData(0,0,0,0);
+
+            for (int i = 0; i < count; i++)
+            {
+                List<int[]> tabs = ArraysGenerator(size);
+
+                long insertionTime = UseInsertionSort(tabs[0]);
+                long quickTime = UseQuickSort(tabs[1]);
+
+                result.insertionMean += insertionTime;
+                result.quickMean += quickTime;
+
+                result.insertionStd += Math.Pow(insertionTime, 2);
+                result.quickStd += Math.Pow(quickTime, 2);
+            }
+
+            result.insertionMean /= count;
+            result.quickMean /= count;
+            result.insertionStd = Math.Sqrt(result.insertionStd / count - Math.Pow(result.insertionMean, 2));
+            result.quickStd = Math.Sqrt(result.quickStd / count - Math.Pow(result.quickMean, 2));
+
+            return result;
+        }
+
+
+        static List<SortData> PerformancesTest(List<int> sizes, int count)
+        {
+            List<SortData> results = new List<SortData> { }; 
+            foreach (int size in sizes)
+            {
+                results.Add(PerformanceTest(size, count));
+            }
+            return results;
+        }
+
+        static void DisplayPerformances(List<int> sizes, int count)
+        {
+            Console.WriteLine("Calculs des performances :");
+            List <SortData> results = PerformancesTest(sizes, count);
+
+            Console.WriteLine("Affichages des performances :");
+            Console.WriteLine("n ;MeanInsertion ;StdInsertion ;MeanQuick ;StdQuick");
+            for (int i = 0; i < sizes.Count; i++)
+            {
+                SortData result = results[i];
+                Console.WriteLine($"{sizes[i]};{result.insertionMean};{result.insertionStd};{result.quickMean};{result.quickStd}");
+                
+            }
+        }
+
+    }
+        
+        
+
+    
+
+
+    class Module4
+    {
+        public void test()
+        {
+            displayNumeros();
+
+            string url = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\test.txt";
+            lireTextFile(url);
+            ecrireTextFile(url);
+        }
+
+        static void displayNumeros()
+        {
+            StringBuilder numeros = new StringBuilder();
+
+            for (int i = 1; i < 101; i++)
+            {
+                numeros.Append($"{i}-");
+            }
+
+            Console.WriteLine(numeros.ToString().TrimEnd('-'));
+        }
+
+        static void lireTextFile(string url)
+        {
+            using (TextReader reader = new StreamReader(url))
+            {
+                string ligne;
+                while ((ligne = reader.ReadLine()) != null && ligne != string.Empty)
+                {
+                    Console.WriteLine(ligne);
+                }
+            }
+        }
+
+        static void ecrireTextFile(string url) {
+
+            TextWriter writer = new StreamWriter(url);
+
+            string input;
+            while ((input = Console.ReadLine()) != string.Empty)
+            {
+                writer.WriteLine(input);
+            }
+            writer.Close();
+
+        }
+
+
+    }
+
+
+    
     class Serie2
     {
         public void test()
@@ -128,7 +468,7 @@ namespace Semaine1
             return res;
         }
 
-        static int BinarySearch(int[] tableau, int valeur)
+        public static int BinarySearch(int[] tableau, int valeur)
         {
             int res = -1;
             int sup = tableau.Length;
@@ -345,7 +685,6 @@ namespace Semaine1
 
 
     }
-
 
     class Module3
     {
@@ -703,5 +1042,7 @@ namespace Semaine1
 
 
     }
-
+    
 }
+
+
