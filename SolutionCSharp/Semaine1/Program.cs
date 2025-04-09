@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Semaine1
 {
@@ -59,7 +60,7 @@ namespace Semaine1
             int[][] K = Substraction(F, I);
             Module3.displayTabBi(K);
 
-            int[][] L = new int[3][] 
+            int[][] L = new int[3][]
             {
                 new int[] {1, 2},
                 new int[] {4, 6},
@@ -74,9 +75,41 @@ namespace Semaine1
             int[][] N = Multiplication(L, M);
             Module3.displayTabBi(N);
 
+            Console.WriteLine("EratosthenesSieve n=100");
+            int[] erato = EratosthenesSieve(100);
+            Module3.displayTabUni(erato);
+
+            Console.WriteLine("QCM");
+            Qcm q1 = new Qcm("Q1", new List<string> { "R1", "R2", "R3" }, 2, 3);
+            Qcm q2 = new Qcm("Q2", new List<string> { "R1", "R2", "R3" }, 1, 3);
+
+            //AskQuestion(q1);
+
+            AskQuestions(new Qcm[] { q1, q2 });
+
+
 
         }
-        
+
+        static bool LinearSearchBool(int[] tableau, int valeur)
+        {
+            bool res = false;
+            if (tableau.Length == 0)
+            {
+                return false;
+            }
+
+            
+            for (int i = 0; i < tableau.Length; i++)
+            {
+                if (tableau[i] == valeur)
+                {
+                    res = true;
+                }
+            }
+            return res;
+        }
+
         static int LinearSearch(int[] tableau, int valeur)
         {
             if (tableau.Length == 0)
@@ -109,10 +142,12 @@ namespace Semaine1
             while (res != (sup - inf) / 2)
             {
                 res = (sup - inf) / 2;
-                if (tableau[res] == valeur) {
+                if (tableau[res] == valeur)
+                {
                     return res;
                 }
-                else if (tableau[res] < valeur) {
+                else if (tableau[res] < valeur)
+                {
                     sup = res;
                 }
                 else
@@ -122,7 +157,7 @@ namespace Semaine1
             }
             return -1;
         }
-        
+
         static int[][] BuildingMatrix(int[] leftVector, int[] rightVector)
         {
             int[][] matrix = new int[leftVector.Length][];
@@ -133,12 +168,12 @@ namespace Semaine1
 
                 for (int j = 0; j < rightVector.Length; j++)
                 {
-                    matrix[i][j] = leftVector[i] * rightVector[j];                    
+                    matrix[i][j] = leftVector[i] * rightVector[j];
                 }
             }
             return matrix;
         }
-        
+
         static int[][] Addition(int[][] leftMatrix, int[][] rightMatrix)
         {
             int[][] matrix = new int[leftMatrix.Length][];
@@ -164,7 +199,7 @@ namespace Semaine1
                 for (int j = 0; j < matrix[0].Length; j++)
                 {
                     matrix[i][j] = matrix[i][j] - rightMatrix[i][j];
-       
+
                 }
             }
             return matrix;
@@ -188,6 +223,125 @@ namespace Semaine1
             return matrix;
 
         }
+
+        static int[] EratosthenesSieve(int n)
+        {
+            List<int> result = new List<int> { };
+
+            for (int i = 0; i < n - 1; i++)
+            {
+                result.Add(i + 2);
+            }
+
+            int iTraite = 0;
+            while (result[iTraite] < Math.Sqrt(result.Max()))
+            {
+
+                foreach (int c in result.GetRange(iTraite + 1, result.Count - iTraite - 1))
+                {
+                    if (c % result[iTraite] == 0)
+                    {
+                        result.Remove(c);
+                    }
+                }
+                iTraite++;
+            }
+            return result.ToArray();
+
+        }
+
+        static int findMax(List<int> list)
+        {
+            int res = list[0];
+            foreach (int l in list)
+            {
+                if (res > l)
+                {
+                    res = l;
+                }
+            }
+            return res;
+        }
+
+        public struct Qcm
+        {
+            public string question;
+            public List<string> answers;
+            public byte solution;
+            public int weight;
+            public Qcm(string Question, List<string> Answers, byte Solution,
+                int Weight)
+            {
+                this.question = Question;
+                this.answers = Answers;
+                this.solution = Solution;
+                this.weight = Weight;
+            }
+
+        }
+    
+
+        static bool QcmValidity(Qcm qcm)
+        {
+            bool res = true;
+
+            if (qcm.solution < 0 || qcm.solution >= qcm.answers.Count)
+            {
+                res = false;
+            }
+            if (qcm.weight < 0)
+            {
+                res = false;
+            }
+            return res;
+        }
+
+        static int AskQuestion(Qcm qcm)
+        {
+            if (!QcmValidity(qcm))
+            {
+                throw new ArgumentException("QCM INVALIDE");
+            }
+
+            Console.WriteLine($"{qcm.question}");
+
+            string answers = "";
+            for (int i = 0; i < qcm.answers.Count(); i++)
+            {
+                answers += $"{i + 1}. {qcm.answers[i]}    ";
+            }
+            Console.WriteLine(answers);
+
+            int answer = -1;
+            while (!(answer > 0 && answer <= qcm.answers.Count))
+            {
+                Console.Write("Réponse : ");
+                answer = int.Parse(Console.ReadLine());
+            }
+
+            if (answer == qcm.solution)
+            {
+                return qcm.weight;
+            }
+            else
+            {
+                return 0;
+            }
+            
+        }
+
+        static void AskQuestions(Qcm[] qcms)
+        {
+            int res = 0;
+            int weights = 0;
+            foreach (Qcm q in qcms)
+            {
+                res += AskQuestion(q);
+                weights += q.weight;
+            }
+            Console.WriteLine($"Résultats du questionnaire : {res} / {weights}");
+        }
+
 
 
     }
