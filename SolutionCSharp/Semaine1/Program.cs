@@ -23,20 +23,317 @@ namespace Semaine1
             Serie2 serie2 = new Serie2();
             serie2.test();
                
-
             Module4 module4 = new Module4();
             module4.test();
             
-            */
             Serie3 serie3 = new Serie3();
             serie3.test();
-            
+            */
+
+           
+
+            Percolation.PercolationSimulation perSim;
+            Percolation.PercolationSimulation.PclData result = perSim.MeanPercolationValue(20, 100);
+            Console.WriteLine($"{result.mean} ; {result.std}");
+
+
 
             Console.ReadKey();
 
         }
     }
+
+
+    class Percolation
+    {
+        public bool[,] open;
+        public bool[,] full;
+        public int N;
+
+        public Percolation(int N)
+        {
+            this.N = N;
+            open = new bool[N, N];
+            full = new bool[N, N];
+        }
+
+        public bool IsOpen(int i, int j)
+        {
+            return open[i, j];
+        }
+
+        public bool IsFull(int i, int j)
+        {
+            return full[i, j];
+        }
+
+        public bool Percolate()
+        {
+            int i = N-1;
+            for (int j = 0; j < N; j++)
+            {
+                if (IsFull(i, j))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public List<KeyValuePair<int, int>> CloseNeighbors(int i, int j)
+        {
+            List<KeyValuePair<int, int>> result = new List<KeyValuePair<int, int>> { };
+
+            if (i > 0)
+            {
+                result.Add(new KeyValuePair<int, int> (i - 1, j));
+            }
+            if (i < N - 1)
+            {
+                result.Add(new KeyValuePair<int, int>(i + 1, j));
+            }
+            if (j > 0)
+            {
+                result.Add(new KeyValuePair<int, int>(i, j - 1));
+            }
+            if (j < N - 1)
+            {
+                result.Add(new KeyValuePair<int, int>(i, j + 1));
+            }
+
+            return result;
+        }
+
+        public bool Open(int i, int j)
+        {
+            bool IsNewOpen = false;
+            // Verification si au moins un voisin est plein de (i,j)
+            bool IsOneNeighborFull = false;
+            List<KeyValuePair<int, int>> Voisins = CloseNeighbors(i, j);
+            foreach (KeyValuePair<int, int> vois in Voisins)
+            {
+                if (IsFull(vois.Key, vois.Value))
+                {
+                    IsOneNeighborFull = true;
+                }
+            }
+
+
+            if ((i==0 || IsOneNeighborFull) && !(IsFull(i,j)))
+            {
+
+                full[i, j] = true;
+                IsNewOpen = true;
+
+                for (int k = 0; k < Voisins.Count; k++)
+                {
+                    if (IsOpen(Voisins[k].Key, Voisins[k].Value) && !IsFull(Voisins[k].Key, Voisins[k].Value)) {
+                        Open(i, j);
+                    }
+                    
+                }
+            }
+            return IsNewOpen;
+
+
+        }
+
+        /*
+        b) Dans le pire des cas, toutes les cases sauf la derniere ligne 
+        sont pleines avant qu'une seule case de la derniere ligne ne soit ouverte
+        Il faut alors N * (N-1) + 1 Open réussi pour qu'il y est percolation.
+
+        c) Au debut, il y a une chance sur N qu'une case de la derniere ligne
+        soit selectionnée. De plus, cette chance augmente à chaque open pour
+        atteindre N/(N+1) à l'avant dernier cas possible. Donc peu probable 
+        d'atteindre le cas limite.
+        */
+
+        public void displayGrid(bool[,] tableau)
+        {
+
+            for (int i = 0; i < N; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    Console.Write($"{tableau[i, j]} ");
+                }
+                Console.WriteLine();
+            }
+
+
+        }
+
+        public struct PercolationSimulation
+        {
+            public struct PclData
+            {
+                public double mean;
+                public double std;
+            }
+
+            public double PercolationValue(int size)
+            {
+                Percolation perc = new Percolation(size);
+                Random rnd = new Random();
+
+                int cpt = 0;
+                while (!perc.Percolate()) {
+                    int i = rnd.Next(0, size);
+                    int j = rnd.Next(0, size);
+
+                    if (perc.Open(i, j))
+                    {
+                        cpt++;
+                    }
+                    
+                }
+                
+                return cpt / Math.Pow(size, 2);
+            }
+
+            public PclData MeanPercolationValue(int size, int t)
+            {
+                PclData result;
+
+                result.mean = 0;
+                result.std = 0;
+
+                for (int i = 0; i < t; i++)
+                {
+                    
+                    result.mean += PercolationValue(size);
+                    result.std += Math.Pow(PercolationValue(size), 2);
+                }
+                result.mean /= t;
+                result.std = Math.Sqrt(result.std / t - Math.Pow(result.mean, 2));
+
+                return result;
+            }
+        }
+        
+    }
+
     
+
+
+
+
+    class Maze
+    {
+        public struct Cell
+        {
+         
+            // true si paroi et false si ouvert
+            // haut, bas, gauche, droite
+            public bool[] walls;
+
+            public bool visited;
+
+            // 0 cellule simple, 1 entree, 2 sortie
+            public byte state;
+
+            public Cell(bool[] Walls, bool Visited, byte State)
+            {
+              
+                this.walls = Walls;
+                this.visited = Visited;
+                this.state = State;
+            }
+        }
+
+        private int N;
+        private int M;
+        private Cell[,] grid;
+        public Maze (int N, int M)
+        {
+            this.N = N;
+            this.M = M;
+            grid = new Cell[N, M];
+        }
+        
+
+        public bool IsOpen(int i, int j, int w)
+        {
+            if (i < 0 || i >= N || j < 0 || j >= M)
+                return false;
+
+            return !(grid[i, j].walls[w]);
+        }
+
+        public bool IsMazeStart(int i, int j)
+        {
+            return (grid[i, j].state == 1);
+        }
+
+        public bool IsMazeEnd(int i, int j)
+        {
+            return (grid[i, j].state == 2);
+        }
+
+        public void Open(int i, int j, int w)
+        {
+            grid[i, j].walls[w] = false;
+            
+            switch (w)
+            {
+                case 0:
+                    if (i != 0)
+                    {
+                        grid[i - 1, j].walls[1] = false;
+                    }
+                    break;
+                case 1:
+                    if (i != N)
+                    {
+                        grid[i + 1, j].walls[0] = false;
+                    }
+                    break;
+                case 2:
+                    if (j != 0)
+                    {
+                        grid[i, j - 1].walls[3] = false;
+                    }
+                    break;
+                case 3:
+                    if (j != M)
+                    {
+                        grid[i, j + 1].walls[2] = false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public Dictionary<int, int> CloseNeighbors(int i, int j)
+        {
+            Dictionary<int, int> result = new Dictionary<int, int>();
+
+            if (i > 0)
+            {
+                result.Add(i - 1, j);
+            }
+            if (i < N-1)
+            {
+                result.Add(i + 1, j);
+            }
+            if (j > 0)
+            {
+                result.Add(i, j - 1);
+            }
+            if (j < M - 1)
+            {
+                result.Add(i, j + 1);
+            }
+
+            return result;
+        }
+
+
+    }
+
+
     class Serie3
     {
         public void test()
@@ -224,6 +521,13 @@ namespace Semaine1
             return sw.ElapsedMilliseconds;
         }
 
+        /*
+        Puisque la génération des tableaux est random, un tableau peut etre 
+        generer déjà trié. Donc il faut multiplier les tableaux pour avoir des
+        données viables (dont le résultat ne dépend pas du random de la génération
+        des tableaux).
+        */
+
         static List<int[]> ArraysGenerator(int size)
         {
             int[] tab1 = new int[size];
@@ -309,11 +613,6 @@ namespace Semaine1
 
     }
         
-        
-
-    
-
-
     class Module4
     {
         public void test()
@@ -365,8 +664,6 @@ namespace Semaine1
 
     }
 
-
-    
     class Serie2
     {
         public void test()
@@ -458,15 +755,21 @@ namespace Semaine1
             }
 
             int res = -1;
-            for (int i = 0; i < tableau.Length; i++)
+            int i = 0;
+            while ((res == -1) && (i < tableau.Length))
             {
                 if (tableau[i] == valeur)
                 {
                     res = i;
                 }
+                i++;
             }
             return res;
         }
+
+        /*
+        Dans le pire des cas, tout le tableau est parcouru sans trouver la valeur
+        */
 
         public static int BinarySearch(int[] tableau, int valeur)
         {
@@ -497,6 +800,12 @@ namespace Semaine1
             }
             return -1;
         }
+
+        /*
+        Dans le pire des cas, soit n la taille du tableau, il faudra log(n)/log(2)
+        éléments lus.
+        */
+
 
         static int[][] BuildingMatrix(int[] leftVector, int[] rightVector)
         {
@@ -617,9 +926,16 @@ namespace Semaine1
                 this.solution = Solution;
                 this.weight = Weight;
             }
-
         }
-    
+
+        /*
+        Les questions et les reponses sont des chaines de caractères et les 
+        reponses sont multiples pour chaque question d'ou la liste.
+        La solution est un byte parce que c'est l'indice de la reponse juste,
+        on suppose qu'une question n'a pas plus de 255 réponses.
+        Pour le poids de chaque question, on met un entier pour que l'utilisateur
+        puisse définir les poids de ses questions aussi finement que voulu.
+        */
 
         static bool QcmValidity(Qcm qcm)
         {
@@ -927,6 +1243,17 @@ namespace Semaine1
             return $"Il est {heure}H, {message}";
         }
 
+        /*
+        1.
+        a) Pour un niveau j, il y a 1 + 2 * (j-1) blocs.
+        b) Donc au niveau N, il y a 1 + 2 * (N-1) blocs.
+        
+        2.
+        a) Le sommet de la pyramide est à la position N.
+        b) gauche(j) = N - j + 1
+           droite(j) = N + j
+        */
+
         static void PyramidConstruction(int n, bool isSmooth)
         {
             for (int i = 1; i <= n; i++)
@@ -989,6 +1316,12 @@ namespace Semaine1
                 return n * RecursiveFactorielle(n - 1);
             }
         }
+
+        /*
+        La version itérative est plus efficace. Il y a moins d'instruction à
+        faire à chaque "boucle".
+        */
+
 
         static bool IsPrime(int value)
         {
