@@ -191,7 +191,23 @@ namespace Semaine1
             Console.WriteLine();
 
             Console.Write($"[[()] : {BracketControls("[[()]")}  ");
-            ;
+
+            Console.WriteLine();
+            PhoneBook phoneBook = new PhoneBook(new Dictionary<string, string>());
+            phoneBook.AddPhoneNumber("0651013987", "Raphael");
+            phoneBook.AddPhoneNumber("0651513987", "Sullivan");
+            phoneBook.AddPhoneNumber("0651693987", "George");
+            phoneBook.DeletePhoneNumber("0651013987");
+            phoneBook.DisplayPhoneBook();
+
+            BusinessSchedule schedule = new BusinessSchedule(new SortedDictionary<DateTime, TimeSpan>());
+            schedule.AddBusinessMeeting(new DateTime(2022, 3, 10, 14, 0, 0), new TimeSpan(1, 0, 0));
+            schedule.AddBusinessMeeting(new DateTime(2022, 3, 10, 18, 0, 0), new TimeSpan(1, 0, 0));
+            schedule.AddBusinessMeeting(new DateTime(2022, 3, 10, 16, 0, 0), new TimeSpan(1, 0, 0)); 
+            schedule.DisplayMeetings();
+            schedule.ClearMeetingPeriod(new DateTime(2022, 3, 10, 14, 0, 0), new DateTime(2022, 3, 10, 16, 30, 0));
+            schedule.DisplayMeetings();
+
         }
 
         /*
@@ -431,20 +447,293 @@ namespace Semaine1
 
         struct PhoneBook
         {
-           
-            static bool IsValidPhoneNumber(string phoneNumber)
+            public Dictionary<string, string> book;
+
+            public PhoneBook(Dictionary<string, string> Book)
+            {
+                this.book = Book;
+        }
+
+            public bool IsValidPhoneNumber(string phoneNumber)
             {
                 return (phoneNumber.Length == 10 && phoneNumber[0] == 0 && phoneNumber[1] != 0);
             }
 
+            public bool ContainsPhoneContact(string phoneNumber)
+            {
+                return this.book.ContainsKey(phoneNumber);
+            }
 
+            public void PhoneContact(string phoneNumber)
+            {
+                if (ContainsPhoneContact(phoneNumber))
+                {
+                    Console.WriteLine(this.book[phoneNumber]);
+                }
+                else
+                {
+                    throw new Exception("Numero de téléphone pas présent");
+                }
+            }
 
+            public bool AddPhoneNumber(string phoneNumber, string name)
+            {
+                bool result = true;
+                if (ContainsPhoneContact(phoneNumber))
+                {
+                    result = false;
+                }
+                else
+                {
+                    this.book.Add(phoneNumber, name);
+                }
+                return result;
+            }
 
+            public bool DeletePhoneNumber(string phoneNumber)
+            {
+                bool result = true;
+                if (ContainsPhoneContact(phoneNumber))
+                {
+                    this.book.Remove(phoneNumber);
+                }
+                else
+                {
+                    result = false;
+                }
+                return result;
+            }
+
+            public void DisplayPhoneBook()
+            {
+                Console.WriteLine("Annuaire téléphonique :");
+                Console.WriteLine("-----------------------");
+
+                if (this.book.Count != 0)
+                {
+                    foreach (KeyValuePair<string, string> phone in this.book)
+                    {
+                        Console.WriteLine($"{phone.Key} : {phone.Value}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Pas de numéros téléphoniques");
+                }
+                Console.WriteLine("-----------------------");
+
+            }
 
         }
 
+        /*
+        Au début : il faut tout décaler d'un donc il y a N inversions
+        Au milieu : il faut décaler la moitié de la liste d'un donc il y a N/2 inversions
+        A la fin, il n'y a pas d'inversion, on ajoute juste à la suite dans la mémoire
+        */
 
+        /*
+        Si la liste est non trié, il faudra au maximum parcourir toute la liste 
+        pour trouver un élément donné.
+        Si la liste est trié, une recherche dichotomique permet de trouver l'élément
+        en log(n)/log(2) comparaisons au maximum.
+        */
 
+        struct BusinessSchedule
+        {
+            public SortedDictionary<DateTime, TimeSpan> schedule;
+            public DateTime startSchedule;
+            public DateTime endSchedule;
+
+            public BusinessSchedule(SortedDictionary<DateTime, TimeSpan> Schedule)
+            {
+                this.schedule = Schedule;
+                this.startSchedule = new DateTime(2020, 1, 1);
+                this.endSchedule = new DateTime(2030, 12, 31);
+            }
+
+            public bool IsEmpty()
+            {
+                return (this.schedule.Count == 0);
+            }
+
+            public void SetRangeOfDates(DateTime begin, DateTime end)
+            {
+                if (begin > end)
+                {
+                    throw new Exception("Date de début et de fin invalide");
+                }
+                if (IsEmpty())
+                {
+                    this.startSchedule = begin;
+                    this.endSchedule = end;
+                }
+                else
+                {
+                    throw new Exception("Emploi du temps pas vide de toute réunion");
+                }
+
+            }
+
+            public void DisplayMeetings(DateTime begin = new DateTime(), DateTime end = new DateTime())
+            {
+                if (begin == new DateTime())
+                {
+                    begin = this.startSchedule;
+                }
+                if (end == new DateTime())
+                {
+                    end = this.endSchedule;
+                }
+
+                Console.WriteLine($"Emploi du temps : {begin.ToString("dd/MM/yyyy HH:mm:ss")} - {end.ToString("dd/MM/yyyy HH:mm:ss")}");
+                Console.WriteLine("-----------------------------------------------------------");
+
+                int i = 1;
+                List<DateTime> rdvDates = this.schedule.Keys.Where(date => date >= begin && date <= end).ToList();
+
+                if (IsEmpty())
+                {
+                    Console.WriteLine("Pas de réunions programmées");
+                }
+                else
+                {
+                    foreach (DateTime rdvDate in rdvDates)
+                    {
+                        TimeSpan rdvDuration = this.schedule[rdvDate];
+                        Console.WriteLine($"Réunion {i}       : {rdvDate.ToString("dd/MM/yyyy HH:mm:ss")} - {rdvDate.Add(rdvDuration).ToString("dd/MM/yyyy HH:mm:ss")}");
+                        i++;
+                    }
+
+                }
+                Console.WriteLine("-----------------------------------------------------------");
+            }
+
+            public KeyValuePair<DateTime?, DateTime?> ClosestElements(DateTime beginMeeting)
+            {
+                DateTime? preDate;
+                try
+                {
+                    preDate = this.schedule.Keys.Where(date => date <= beginMeeting).Last();
+                }
+                catch (Exception)
+                {
+                    preDate = null;
+                }
+
+                DateTime? postDate;
+                try
+                {
+                    postDate =  this.schedule.Keys.Where(date => date > beginMeeting).First();
+                }
+                catch (Exception)
+                {
+                    postDate = null;
+                }
+
+                return new KeyValuePair<DateTime?, DateTime?>(preDate, postDate);
+            }
+
+            public bool AddBusinessMeeting(DateTime date, TimeSpan duration)
+            {
+
+                bool result;
+                if (!(date > this.startSchedule && date < this.endSchedule))
+                {
+                    result = false;
+                }
+                else if (!(date + duration > this.startSchedule && date + duration < this.endSchedule))
+                {
+                    result = false;
+                }
+                else
+                {
+                    KeyValuePair<DateTime?, DateTime?> closestElements = ClosestElements(date);
+                    
+                    if (closestElements.Key != null && closestElements.Key.Value + this.schedule[closestElements.Key.Value] <= date)
+                    {
+                        if(closestElements.Value != null && closestElements.Value.Value >= date + duration)
+                        {
+                            this.schedule.Add(date, duration);
+                            result = true;
+                        }
+                        else if (closestElements.Value == null)
+                        {
+                            this.schedule.Add(date, duration);
+                            result = true;
+                        }
+                        else
+                        {
+                            result = false;
+                        }
+                    }
+                    else if (closestElements.Key == null)
+                    {
+                        this.schedule.Add(date, duration);
+                        result = true;
+                    }
+                    else
+                    {
+                        result = false;
+
+                    }
+                }
+                return result;
+            }
+
+            public bool DeleteBusinessMeeting(DateTime date)
+            {
+                bool result;
+
+                SortedDictionary<DateTime, TimeSpan> s = this.schedule;
+                DateTime? delDate;
+                try
+                {
+                    delDate = this.schedule.Keys.Where(d => d <= date && d + s[d] > date).First();
+                    this.schedule.Remove(delDate.Value);
+                    result = true;
+                }
+                catch (Exception)
+                {
+                    delDate = null;
+                    result = false;
+                }
+
+                return result;
+            }
+
+            public int ClearMeetingPeriod(DateTime begin, DateTime end)
+            {
+                int i = 0;
+                if (!(begin > this.startSchedule && begin < this.endSchedule))
+                {
+                    throw new Exception("Début de période supprimer hors période de l'emploi du temps");
+                }
+                else if (!(end > this.startSchedule && end < this.endSchedule))
+                {
+                    throw new Exception("Fin de période supprimer hors période de l'emploi du temps");
+                }
+                else if (begin > end)
+                {
+                    throw new Exception("Période de suppression invalide : début après fin");
+                }
+                else
+                {
+                    DateTime? nextElement = begin;
+                    DateTime? tempElement;
+                    while (nextElement != null && nextElement < end)
+                    {
+                        tempElement = ClosestElements(nextElement.Value).Value;
+                        DeleteBusinessMeeting(nextElement.Value);
+                        nextElement = tempElement;
+                        i++;
+                    }
+                }
+                return i;
+            }
+            
+
+}
 
 
     }
