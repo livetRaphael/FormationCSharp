@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Semaine1
 {
@@ -28,13 +29,16 @@ namespace Semaine1
             
             Serie3 serie3 = new Serie3();
             serie3.test();
-            */
-
-           
+                 
 
             Percolation.PercolationSimulation perSim;
             Percolation.PercolationSimulation.PclData result = perSim.MeanPercolationValue(20, 100);
             Console.WriteLine($"{result.mean} ; {result.std}");
+
+            */
+
+            Serie4 serie4 = new Serie4();
+            serie4.test();
 
 
 
@@ -42,6 +46,411 @@ namespace Semaine1
 
         }
     }
+
+
+    class Maze
+    {
+        public struct Cell
+        {
+
+            // true si paroi et false si ouvert
+            // haut, bas, gauche, droite
+            public bool[] walls;
+
+            public bool visited;
+
+            // 0 cellule simple, 1 entree, 2 sortie
+            public byte state;
+
+            public Cell(bool[] Walls, bool Visited, byte State)
+            {
+
+                this.walls = Walls;
+                this.visited = Visited;
+                this.state = State;
+            }
+        }
+
+        private int N;
+        private int M;
+        private Cell[,] grid;
+        public Maze(int N, int M)
+        {
+            this.N = N;
+            this.M = M;
+            grid = new Cell[N, M];
+        }
+
+
+        public bool IsOpen(int i, int j, int w)
+        {
+            if (i < 0 || i >= N || j < 0 || j >= M)
+                return false;
+
+            return !(grid[i, j].walls[w]);
+        }
+
+        public bool IsMazeStart(int i, int j)
+        {
+            return (grid[i, j].state == 1);
+        }
+
+        public bool IsMazeEnd(int i, int j)
+        {
+            return (grid[i, j].state == 2);
+        }
+
+        public void Open(int i, int j, int w)
+        {
+            grid[i, j].walls[w] = false;
+
+            switch (w)
+            {
+                case 0:
+                    if (i != 0)
+                    {
+                        grid[i - 1, j].walls[1] = false;
+                    }
+                    break;
+                case 1:
+                    if (i != N)
+                    {
+                        grid[i + 1, j].walls[0] = false;
+                    }
+                    break;
+                case 2:
+                    if (j != 0)
+                    {
+                        grid[i, j - 1].walls[3] = false;
+                    }
+                    break;
+                case 3:
+                    if (j != M)
+                    {
+                        grid[i, j + 1].walls[2] = false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public Dictionary<int, int> CloseNeighbors(int i, int j)
+        {
+            Dictionary<int, int> result = new Dictionary<int, int>();
+
+            if (i > 0)
+            {
+                result.Add(i - 1, j);
+            }
+            if (i < N - 1)
+            {
+                result.Add(i + 1, j);
+            }
+            if (j > 0)
+            {
+                result.Add(i, j - 1);
+            }
+            if (j < M - 1)
+            {
+                result.Add(i, j + 1);
+            }
+
+            return result;
+        }
+
+
+    }
+
+
+    class Serie4
+    {
+
+        public void test()
+        {
+            string code = "=.=.=.=...=...=.===.=.=...=.===.=.=...===.===.===.....=.===.===...===.===.===...=.===.=...=.===.=.=...===.=.=";
+
+
+            Console.WriteLine(LettersCount(code));
+            Console.WriteLine(WordsCount(code));
+
+            Console.Write($"{code} :");
+            Console.Write($" {MorseTranslation(code)}");
+            Console.WriteLine();
+
+            Console.Write($"{code} :");
+            Console.Write($" {EfficientMorseTranslation(code)}");
+            Console.WriteLine();
+
+            string phrase = "BONNE NUIT";
+            string phraseCode = MorseEncryption(phrase);
+
+            Console.Write($"{phrase} :");
+            Console.Write($" {phraseCode} :");
+            Console.Write($" {EfficientMorseTranslation(phraseCode)}");
+            Console.WriteLine();
+
+            Console.Write($"[[()] : {BracketControls("[[()]")}  ");
+            ;
+        }
+
+        /*
+        Le dictionnaire a l'air particulièrement adapté puisqu'on a une correspondance 
+        clair entre chaque lettre et son code morse.
+        */
+
+        static int LettersCount(string code)
+        {
+            return code.Replace(".....", "...").Split(new[] { "..." }, StringSplitOptions.None).Count();
+        }
+
+        static int WordsCount(string code)
+        {
+            return code.Split(new[] { "....." }, StringSplitOptions.None).Count();
+        }
+
+        static string MorseTranslation(string code)
+        {
+            Dictionary<char, string> morseCode = new Dictionary<char, string>()
+        {
+            {'A', "=.==="},
+            {'B', "===.=.=.="},
+            {'C', "===.=.===.="},
+            {'D', "===.=.="},
+            {'E', "="},
+            {'F', "=.=.===.="},
+            {'G', "===.===.="},
+            {'H', "=.=.=.="},
+            {'I', "=.="},
+            {'J', "=.===.===.==="},
+            {'K', "===.=.==="},
+            {'L', "=.===.=.="},
+            {'M', "===.==="},
+            {'N', "===.="},
+            {'O', "===.===.==="},
+            {'P', "=.===.===.="},
+            {'Q', "===.===.=.==="},
+            {'R', "=.===.="},
+            {'S', "=.=.="},
+            {'T', "==="},
+            {'U', "=.=.==="},
+            {'V', "=.=.=.==="},
+            {'W', "=.===.==="},
+            {'X', "===.=.=.==="},
+            {'Y', "===.=.===.==="},
+            {'Z', "===.===.=.="}
+        };
+            // Inversion du dictionnaire : morse -> caractère
+            var reversedMorseCode = morseCode.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+
+            string decode = "";
+
+            string[] words = code.Split(new[] { "....." }, StringSplitOptions.None);
+            foreach (string word in words)
+            {
+
+                string[] letters = word.Split(new[] { "..." }, StringSplitOptions.None);
+                foreach (string letter in letters)
+                {
+
+                    if (reversedMorseCode.TryGetValue(letter, out char decodedLetter))
+                    {
+                        decode += decodedLetter;
+                    }
+                    else
+                    {
+                        decode += "?";
+                    }
+                }
+                decode += " ";
+            }
+            return decode;
+        }
+
+        static string EfficientMorseTranslation(string code)
+        {
+            Dictionary<char, string> morseCode = new Dictionary<char, string>()
+        {
+            {'A', "=.==="},
+            {'B', "===.=.=.="},
+            {'C', "===.=.===.="},
+            {'D', "===.=.="},
+            {'E', "="},
+            {'F', "=.=.===.="},
+            {'G', "===.===.="},
+            {'H', "=.=.=.="},
+            {'I', "=.="},
+            {'J', "=.===.===.==="},
+            {'K', "===.=.==="},
+            {'L', "=.===.=.="},
+            {'M', "===.==="},
+            {'N', "===.="},
+            {'O', "===.===.==="},
+            {'P', "=.===.===.="},
+            {'Q', "===.===.=.==="},
+            {'R', "=.===.="},
+            {'S', "=.=.="},
+            {'T', "==="},
+            {'U', "=.=.==="},
+            {'V', "=.=.=.==="},
+            {'W', "=.===.==="},
+            {'X', "===.=.=.==="},
+            {'Y', "===.=.===.==="},
+            {'Z', "===.===.=.="}
+        };
+            // Inversion du dictionnaire : morse -> caractère
+            var reversedMorseCode = morseCode.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+
+            string decode = "";
+
+            string[] words = Regex.Split(code, @"\.{5,}"); ;
+            foreach (string word in words)
+            {
+
+                string[] letters = word.Split(new[] { "...", "...." }, StringSplitOptions.None);
+                foreach (string letter in letters)
+                {
+
+                    if (reversedMorseCode.TryGetValue(letter.Replace("..", "."), out char decodedLetter))
+                    {
+                        decode += decodedLetter;
+                    }
+                    else
+                    {
+                        decode += "?";
+                    }
+                }
+                decode += " ";
+            }
+            return decode;
+        }
+
+        static string MorseEncryption(string sentence)
+        {
+            Dictionary<char, string> morseCode = new Dictionary<char, string>()
+        {
+            {'A', "=.==="},
+            {'B', "===.=.=.="},
+            {'C', "===.=.===.="},
+            {'D', "===.=.="},
+            {'E', "="},
+            {'F', "=.=.===.="},
+            {'G', "===.===.="},
+            {'H', "=.=.=.="},
+            {'I', "=.="},
+            {'J', "=.===.===.==="},
+            {'K', "===.=.==="},
+            {'L', "=.===.=.="},
+            {'M', "===.==="},
+            {'N', "===.="},
+            {'O', "===.===.==="},
+            {'P', "=.===.===.="},
+            {'Q', "===.===.=.==="},
+            {'R', "=.===.="},
+            {'S', "=.=.="},
+            {'T', "==="},
+            {'U', "=.=.==="},
+            {'V', "=.=.=.==="},
+            {'W', "=.===.==="},
+            {'X', "===.=.=.==="},
+            {'Y', "===.=.===.==="},
+            {'Z', "===.===.=.="}
+        };
+
+            string code = "";
+            foreach (char letter in sentence)
+            {
+                if (letter == ' ')
+                {
+                    code += ".....";
+                }
+                else
+                {
+                    if (morseCode.TryGetValue(letter, out string codedLetter))
+                    {
+                        code += codedLetter;
+                    }
+                    else
+                    {
+                        code += "?";
+                    }
+                    code += "...";
+                }
+            }
+            return code.Trim('.');
+        }
+
+        /*
+        Je pense qu'un stack de caractère, ça parait pratique d'avoir un tableau
+        variable pour insérer les parenthèses ouvrantes et remove lorsqu'elle trouve leurs
+        parenthèses fermantes --> LIFO
+        */
+
+        static bool BracketControls(string sentence)
+        {
+            List<char> typeParOuvr = new List<char> { '{', '(', '[' };
+            List<char> typeParFerm = new List<char> { '}', ')', ']' };
+            Stack<char> par = new Stack<char> { };
+
+            bool result = true;
+
+            foreach (char c in sentence)
+            {
+                if (typeParOuvr.Contains(c)) {
+                    par.Push(c);
+                }
+
+                // Verification que c est une parenthèse fermante
+                if (typeParFerm.Contains(c))
+                {
+                    // Verification que la dernière parenthèse ouvrante correspond à cette
+                    // parenthèse fermante
+                    if (par.Count != 0 && par.Peek() == typeParOuvr[typeParFerm.LastIndexOf(c)])
+                    {
+                        par.Pop();
+                    }
+                    else
+                    {
+                        result = false;
+                    }
+                }
+            }
+            if (par.Count != 0)
+            {
+                result = false;
+            }
+            return result;
+        }
+
+
+        /*
+        Puisque le numero de telephone est unique et considerant le sens de fonctionnement
+        de l'annuaire, je ferais un dictionnaire ayant pour clé le numero et pour valeur
+        le nom du contact.
+        */
+
+        struct PhoneBook
+        {
+           
+            static bool IsValidPhoneNumber(string phoneNumber)
+            {
+                return (phoneNumber.Length == 10 && phoneNumber[0] == 0 && phoneNumber[1] != 0);
+            }
+
+
+
+
+
+        }
+
+
+
+
+
+    }
+
+
+
 
 
     class Percolation
@@ -213,127 +622,7 @@ namespace Semaine1
         }
         
     }
-
     
-
-
-
-
-    class Maze
-    {
-        public struct Cell
-        {
-         
-            // true si paroi et false si ouvert
-            // haut, bas, gauche, droite
-            public bool[] walls;
-
-            public bool visited;
-
-            // 0 cellule simple, 1 entree, 2 sortie
-            public byte state;
-
-            public Cell(bool[] Walls, bool Visited, byte State)
-            {
-              
-                this.walls = Walls;
-                this.visited = Visited;
-                this.state = State;
-            }
-        }
-
-        private int N;
-        private int M;
-        private Cell[,] grid;
-        public Maze (int N, int M)
-        {
-            this.N = N;
-            this.M = M;
-            grid = new Cell[N, M];
-        }
-        
-
-        public bool IsOpen(int i, int j, int w)
-        {
-            if (i < 0 || i >= N || j < 0 || j >= M)
-                return false;
-
-            return !(grid[i, j].walls[w]);
-        }
-
-        public bool IsMazeStart(int i, int j)
-        {
-            return (grid[i, j].state == 1);
-        }
-
-        public bool IsMazeEnd(int i, int j)
-        {
-            return (grid[i, j].state == 2);
-        }
-
-        public void Open(int i, int j, int w)
-        {
-            grid[i, j].walls[w] = false;
-            
-            switch (w)
-            {
-                case 0:
-                    if (i != 0)
-                    {
-                        grid[i - 1, j].walls[1] = false;
-                    }
-                    break;
-                case 1:
-                    if (i != N)
-                    {
-                        grid[i + 1, j].walls[0] = false;
-                    }
-                    break;
-                case 2:
-                    if (j != 0)
-                    {
-                        grid[i, j - 1].walls[3] = false;
-                    }
-                    break;
-                case 3:
-                    if (j != M)
-                    {
-                        grid[i, j + 1].walls[2] = false;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        public Dictionary<int, int> CloseNeighbors(int i, int j)
-        {
-            Dictionary<int, int> result = new Dictionary<int, int>();
-
-            if (i > 0)
-            {
-                result.Add(i - 1, j);
-            }
-            if (i < N-1)
-            {
-                result.Add(i + 1, j);
-            }
-            if (j > 0)
-            {
-                result.Add(i, j - 1);
-            }
-            if (j < M - 1)
-            {
-                result.Add(i, j + 1);
-            }
-
-            return result;
-        }
-
-
-    }
-
-
     class Serie3
     {
         public void test()
