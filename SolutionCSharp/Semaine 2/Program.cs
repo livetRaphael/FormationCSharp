@@ -1,119 +1,144 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CompteBancaires;
+using Transactions;
+
 
 namespace Semaine_2
 {
-    class Program
+    class Banque
     {
-        static void Main(string[] args)
-        {
-        }
-    }
 
-    class CompteBancaire
-    {
-        public uint _id;
-        public double _solde;
-        public double _maxRetrait;
-        public List<Transaction> histo;
-
-        CompteBancaire(uint id)
-        {
-            this._id = id;
-            this._solde = 0;
-            this._maxRetrait = 1000;
-            this.histo = new List<Transaction> { };
-        }
-
-        private bool IsMaxRetraitReached(double montant)
-        {
-            double sumPastTransactions = 0;
-
-            List<Transaction> lastTenTransactions = this.histo.Where(t => t._compteSrc._id == this._id).Reverse().Take(10).ToList();
-
-            foreach (Transaction transaction in lastTenTransactions)
-            { 
-                sumPastTransactions += transaction._montant;
-            }
-            return (montant + sumPastTransactions > this._maxRetrait);
-        }
-
-        private bool IsDepotArgentValid(double montant)
-        {
-            return (montant >= 0);
-        }
-        private bool IsRetirerArgentValid(double montant)
-        {
-            return (montant > 0 && this._solde >= montant && !IsMaxRetraitReached(montant));
-        }
+        public List<CompteBancaire> listComptes = new List<CompteBancaire> { };
         
 
-        public bool DepotArgent(uint id, double montant)
+        public static void Main(string[] args)
         {
-            if (!IsDepotArgentValid(montant))
+            Banque banque = new Banque();
+
+            string inputCompte = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet\\inputCompte.txt";
+            // Lecture de chaque ligne du fichier entrée des comptes
+            using (TextReader readerCompte = new StreamReader(inputCompte))
             {
-                return false;
+                string ligne;
+                while ((ligne = readerCompte.ReadLine()) != null && ligne != string.Empty)
+                {
+                    string[] splitLigne = ligne.Split(';');
+                    uint id = uint.Parse(splitLigne[0]);
+                    
+
+                    if (banque.IsCompteAlreadyExist(id))
+                    {
+                        continue;
+                    }
+
+                    banque.listComptes.Add(new CompteBancaire(id));
+                    if (splitLigne[1] != string.Empty)
+                    {
+                        double solde = double.Parse(splitLigne[1], CultureInfo.InvariantCulture);
+                        banque.listComptes[banque.listComptes.Count - 1]._solde = solde;
+                    }
+                }
             }
 
-            this._solde += montant;
-            this.histo.Add(new Transaction(id, montant, 0, this._id));
-            return true;
-        }
-   
-        public bool RetirerArgent(uint id, double montant)
-        {
-            if (!IsRetirerArgentValid(montant))
+            string labelSoldesCompte = "";
+            for (int i = 1; i < banque.listComptes.Count + 1; i++)
             {
-                return false;
+                labelSoldesCompte += "Solde compte " + i + "  ";
+            }
+            Console.WriteLine($"Sorties   {labelSoldesCompte}");
+            string soldesCompte = "";
+            foreach (CompteBancaire cpt in banque.listComptes)
+            {
+                soldesCompte += "     " + cpt._solde.ToString("0000.00") + "     ";
+            }
+            Console.WriteLine($"        {soldesCompte}");
+
+
+
+            string outputStatut = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet\\outputStatut.txt";
+            using (TextWriter writerStatut = new StreamWriter(outputStatut))
+            {
+                string inputTransaction = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet\\inputTransaction.txt";
+                using (TextReader readerTransaction = new StreamReader(inputTransaction))
+                {
+                    string ligne;
+                    // Lecture de chaque ligne du fichier entrée des transactions
+                    while ((ligne = readerTransaction.ReadLine()) != null && ligne != string.Empty)
+                    {
+                        string[] splitLigne = ligne.Split(';');
+
+                        uint id = uint.Parse(splitLigne[0]);
+                        double montant = double.Parse(splitLigne[1], CultureInfo.InvariantCulture);
+                        uint idCompteSrc = uint.Parse(splitLigne[2]);
+                        uint idCompteDst = uint.Parse(splitLigne[3]);
+
+                        if (banque.IsTransactionAlreadyExist(id))
+                        {
+                            continue;
+                        }
+
+                        bool statut = false;
+                        // Cas DEPOT
+                        if (idCompteSrc == 0)
+                        {
+                            CompteBancaire compteDst = banque.findCompteFromId(idCompteDst);
+                            statut = compteDst.DepotArgent(id, montant);
+                        }
+                        // Cas RETRAIT
+                        else if (idCompteDst == 0)
+                        {
+                            CompteBancaire compteSrc = banque.findCompteFromId(idCompteSrc);
+                            statut = compteSrc.RetirerArgent(id, montant);
+                        }
+                        // Cas PRELEVEMENT/VIREMENT
+                        else
+                        {
+                            CompteBancaire compteDst = banque.findCompteFromId(idCompteDst);
+                            CompteBancaire compteSrc = banque.findCompteFromId(idCompteSrc);
+                            
+                            statut = compteDst.Prelevement(id, montant, compteSrc);
+                        }
+                        string labelStatut = statut ? "OK": "KO";
+                        writerStatut.WriteLine($"{id};{labelStatut}");
+
+                        soldesCompte = "";
+                        foreach (CompteBancaire cpt in banque.listComptes)
+                        {
+                            soldesCompte += "     " + cpt._solde.ToString("0000.00") + "     ";
+                        }
+
+                        Console.WriteLine($" {id};{labelStatut}   {soldesCompte}");
+
+                        
+                    }
+                }
             }
 
-            this._solde -= montant;
-            this.histo.Add(new Transaction(id, montant, this._id, 0));
-            return true;
+            Console.ReadKey();
         }
 
-        public bool Virement(uint id, double montant, uint idCompteDst)
+        public bool IsCompteAlreadyExist(uint id)
         {
-            if (!IsRetirerArgentValid(montant))
-            {
-                return false;
-            }
-            
-
-
-
-
-
-            return true; ;
+            return (this.listComptes.Where(cpt => cpt._id == id).Count()>0);
         }
-    
-    
-    
-    
-    
+
+        public bool IsTransactionAlreadyExist(uint id)
+        {
+            return (this.listComptes.Where(cpt => cpt._histo.Where(trans => trans._id == id).Count() > 0).Count() > 0);
+        }
+
+
+        public CompteBancaire findCompteFromId(uint id)
+        {
+            return this.listComptes.Where(cpt => cpt._id == id).ToList()[0];
+        }
     }
 
-    class Transaction
-    {
-        public uint _id;
-        public double _montant;
-        public uint _idCompteSrc;
-        public uint _idCompteDst;
-
-        
-
-        public Transaction(uint id, double montant, uint idCompteSrc, uint idCompteDst)
-        {
-            this._id = id;
-            this._montant = montant;
-            this._idCompteSrc = idCompteSrc;
-            this._idCompteDst = idCompteDst;
-        }
-
-
-    }
 
 }
