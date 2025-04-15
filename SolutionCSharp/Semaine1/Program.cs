@@ -42,7 +42,7 @@ namespace Semaine1
             */
 
 
-            Console.WriteLine("Labyrinth");
+            Console.WriteLine("Labyrinthe");
             Maze lab = new Maze(25, 25);
             lab.Generate();
             lab.Display();
