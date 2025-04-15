@@ -15,42 +15,60 @@ namespace Semaine1
         static void Main(string[] args)
         {
             /*
-            Serie1 serie1 = new Serie1();
-            serie1.test();
-            
-            Module3 module3 = new Module3();
-            module3.test();
+            Console.WriteLine("Serie 1");
+            Serie1.test();
 
-            Serie2 serie2 = new Serie2();
-            serie2.test();
-               
-            Module4 module4 = new Module4();
-            module4.test();
-            
-            Serie3 serie3 = new Serie3();
-            serie3.test();
-                 
+            Console.WriteLine("Module 3");
+            Module3.test();
 
+            Console.WriteLine("Serie 2");
+            Serie2.test();
+
+            Console.WriteLine("Module 4");
+            Module4.test();
+
+            
+            Console.WriteLine("Serie 3");
+            Serie3.test();
+            
+
+            Console.WriteLine("Percolation");
             Percolation.PercolationSimulation perSim;
             Percolation.PercolationSimulation.PclData result = perSim.MeanPercolationValue(20, 100);
             Console.WriteLine($"{result.mean} ; {result.std}");
 
+            Console.WriteLine("Serie 4");
+            Serie4.test();
             */
 
-            Serie4 serie4 = new Serie4();
-            serie4.test();
 
-
+            Console.WriteLine("Labyrinth");
+            Maze lab = new Maze(25, 25);
+            lab.Generate();
+            lab.Display();
+            
 
             Console.ReadKey();
 
         }
     }
 
-
+    
     class Maze
     {
-        public struct Cell
+
+        public int N;
+        public int M;
+        public Cell[,] grid;
+
+        public Maze(int N, int M)
+        {
+            this.N = N;
+            this.M = M;
+            
+        }
+
+        public class Cell
         {
 
             // true si paroi et false si ouvert
@@ -62,25 +80,28 @@ namespace Semaine1
             // 0 cellule simple, 1 entree, 2 sortie
             public byte state;
 
-            public Cell(bool[] Walls, bool Visited, byte State)
+            public Cell()
             {
-
-                this.walls = Walls;
-                this.visited = Visited;
-                this.state = State;
+                this.walls = new bool[] { false, false, false, false };
+                this.visited = false;
+                this.state = 0;
             }
-        }
 
-        private int N;
-        private int M;
-        private Cell[,] grid;
-        public Maze(int N, int M)
-        {
-            this.N = N;
-            this.M = M;
-            grid = new Cell[N, M];
-        }
+            public static Cell[,] GetGrid(int N, int M)
+            {
+                Cell[,] grid = new Cell[N, M];
+                for (int i = 0; i < N; i++)
+                {
+                    for (int j = 0; j < M; j++)
+                    {
+                        grid[i, j] = new Cell();
+                    }
+                }
+                return grid;
+            }
 
+
+        }
 
         public bool IsOpen(int i, int j, int w)
         {
@@ -102,32 +123,32 @@ namespace Semaine1
 
         public void Open(int i, int j, int w)
         {
-            grid[i, j].walls[w] = false;
+            grid[i, j].walls[w] = true;
 
             switch (w)
             {
                 case 0:
                     if (i != 0)
                     {
-                        grid[i - 1, j].walls[1] = false;
+                        grid[i - 1, j].walls[1] = true;
                     }
                     break;
                 case 1:
-                    if (i != N)
+                    if (i != N-1)
                     {
-                        grid[i + 1, j].walls[0] = false;
+                        grid[i + 1, j].walls[0] = true;
                     }
                     break;
                 case 2:
                     if (j != 0)
                     {
-                        grid[i, j - 1].walls[3] = false;
+                        grid[i, j - 1].walls[3] = true;
                     }
                     break;
                 case 3:
-                    if (j != M)
+                    if (j != M-1)
                     {
-                        grid[i, j + 1].walls[2] = false;
+                        grid[i, j + 1].walls[2] = true;
                     }
                     break;
                 default:
@@ -135,38 +156,223 @@ namespace Semaine1
             }
         }
 
-        public Dictionary<int, int> CloseNeighbors(int i, int j)
+        public List<KeyValuePair<int, int>> CloseNeighbors(int i, int j)
         {
-            Dictionary<int, int> result = new Dictionary<int, int>();
+            List<KeyValuePair<int, int>> result = new List<KeyValuePair<int, int>> { };
 
             if (i > 0)
             {
-                result.Add(i - 1, j);
+                result.Add(new KeyValuePair<int, int>(i - 1, j));
             }
             if (i < N - 1)
             {
-                result.Add(i + 1, j);
+                result.Add(new KeyValuePair<int, int>(i + 1, j));
             }
             if (j > 0)
             {
-                result.Add(i, j - 1);
+                result.Add(new KeyValuePair<int, int>(i, j - 1));
             }
             if (j < M - 1)
             {
-                result.Add(i, j + 1);
+                result.Add(new KeyValuePair<int, int>(i, j + 1));
             }
 
             return result;
         }
 
+        public KeyValuePair<int, int> Generate()
+        {
+            this.grid = Cell.GetGrid(N, M);
+
+            Random rnd = new Random();
+            int i = rnd.Next(0, N);
+            int j = rnd.Next(0, M);
+            this.grid[i, j].visited = true;
+
+            int iInit = i;
+            int jInit = j;
+
+            int L;
+            int w = 0;
+            Stack<KeyValuePair<int, int>> visitedCells = new Stack<KeyValuePair<int, int>> { };
+
+            
+            do
+            {
+                do
+                {
+                    // On cherche tous les voisins non visité de la cellule (i,j) 
+                    List<KeyValuePair<int, int>> voisins = CloseNeighbors(i, j).Where(v => grid[v.Key, v.Value].visited == false).ToList();
+                    L = voisins.Count();
+
+                    if (L == 0)
+                    {
+                        break;
+                    }
+
+                    // On garde en mémoire la cell dont l'on vient
+                    visitedCells.Push(new KeyValuePair<int, int>(i, j));
+
+                    // On choisit un voisin de cette cellule au hasard
+                    int k = rnd.Next(0, L);
+                    KeyValuePair<int, int> voisin = voisins[k];
+
+                    // On cherche la paroi entre les 2 cellules
+                    w = findWallBetweenTwoCells(visitedCells.Peek(), voisin);
+
+                    // On ouvre la paroi et on met l'état de visite de la nouvelle cellule à true
+                    Open(i, j, w);
+
+                    // On visite le voisin
+                    i = voisin.Key;
+                    j = voisin.Value;
+                    this.grid[i, j].visited = true;
+
+                } while (L != 0);
+
+                // On revient à la cellule précédente 
+                KeyValuePair<int, int> oldCell = visitedCells.Pop();
+                i = oldCell.Key;
+                j = oldCell.Value;
+                
+            } while (visitedCells.Count != 0);
+
+            
+            // On choisit une cellule du bord au hasard pour l'entree et la sortie
+            KeyValuePair<int, int> entree = findRandomCellOnSides(N, M, rnd, ref w);
+            this.grid[entree.Key, entree.Value].state = 1;
+            this.grid[entree.Key, entree.Value].walls[w] = true;
+
+            KeyValuePair<int, int> sortie = findRandomCellOnSides(N, M, rnd, ref w);
+            this.grid[sortie.Key, sortie.Value].state = 2;
+            this.grid[sortie.Key, sortie.Value].walls[w] = true;
+
+            return entree;
+        }
+
+        public static int findWallBetweenTwoCells(KeyValuePair<int, int> c1, KeyValuePair<int, int> c2)
+        {
+            int w = -1;
+            w = (w == -1 && c2.Key < c1.Key) ? 0 : w;
+            w = (w == -1 && c2.Key > c1.Key) ? 1 : w;
+            w = (w == -1 && c2.Value < c1.Value) ? 2 : w;
+            w = (w == -1 && c2.Value > c1.Value) ? 3 : w;
+            return w;
+        }
+
+        public static KeyValuePair<int, int> findRandomCellOnSides(int N, int M, Random rnd, ref int w)
+        {
+            int x, y;
+
+            // Choisir un bord aléatoirement : 0 = haut, 1 = bas, 2 = gauche, 3 = droite
+            w = rnd.Next(4);
+
+            switch (w)
+            {
+                case 0: // Haut
+                    x = 0;
+                    y = rnd.Next(M);
+                    break;
+                case 1: // Bas
+                    x = N - 1;
+                    y = rnd.Next(M);
+                    break;
+                case 2: // Gauche
+                    y = 0;
+                    x = rnd.Next(N);
+                    break;
+                case 3: // Droite
+                    y = M - 1;
+                    x = rnd.Next(N);
+                    break;
+                default:
+                    // Fallback (devrait jamais arriver)
+                    x = 0;
+                    y = 0;
+                    break;
+            }
+            return new KeyValuePair<int, int> (x, y);
+        }
+
+
+        public string DisplayLine(int n)
+        {
+            string result = "";
+
+            // Premier mur du haut du labyrinthe
+            if (n == 0)
+            {
+                for (int j = 0; j < this.M; j++)
+                {
+                    if (this.grid[n, j].walls[0] == false)
+                    {
+                        result += " ---";
+                    }
+                    else
+                    {
+                        result += "    ";
+                    }
+                }
+                result += "\n";
+            }
+            
+
+            // Mur de gauche de la Nième ligne
+            for (int j = 0; j < this.M; j++)
+            {
+                if (this.grid[n, j].walls[2] == false)
+                {
+                    result += "|   ";
+                }
+                else
+                {
+                    result += "    ";
+                }
+            }
+            // Dernier mur de droite de la Nième ligne
+            if (this.grid[n, this.M - 1].walls[3] == false)
+            {
+                result += "|";
+            }
+            result += "\n";
+
+            // Mur du bas de la Nième ligne
+            for (int j = 0; j < this.M; j++)
+            {
+                if (this.grid[n, j].walls[1] == false)
+                {
+                    result += " ---";
+                }
+                else
+                {
+                    result += "    ";
+                }
+            }
+            //result += "\n";
+
+
+            return result;
+        }
+
+        public List<string> Display()
+        {
+            List<string> result = new List<string> { };
+            for (int i = 0; i < this.N; i++)
+            {
+                string iLine = DisplayLine(i);
+                result.Add(iLine);
+                Console.WriteLine(iLine);
+            }
+            return result;
+        }
 
     }
-
+    
 
     class Serie4
     {
 
-        public void test()
+        public static void test()
         {
             string code = "=.=.=.=...=...=.===.=.=...=.===.=.=...===.===.===.....=.===.===...===.===.===...=.===.=...=.===.=.=...===.=.=";
 
@@ -738,10 +944,6 @@ namespace Semaine1
 
     }
 
-
-
-
-
     class Percolation
     {
         public bool[,] open;
@@ -858,8 +1060,6 @@ namespace Semaine1
                 }
                 Console.WriteLine();
             }
-
-
         }
 
         public struct PercolationSimulation
@@ -914,7 +1114,7 @@ namespace Semaine1
     
     class Serie3
     {
-        public void test()
+        public static void test()
         {
 
             string url = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\";
@@ -1193,7 +1393,7 @@ namespace Semaine1
         
     class Module4
     {
-        public void test()
+        public static void test()
         {
             displayNumeros();
 
@@ -1244,7 +1444,7 @@ namespace Semaine1
 
     class Serie2
     {
-        public void test()
+        public static void test()
         {
             int[] A = new int[] { 1, -5, 10, 3, 0, 4, 2, -7 };
             Console.WriteLine(LinearSearch(A, -5));
@@ -1582,7 +1782,7 @@ namespace Semaine1
 
     class Module3
     {
-        public void test()
+        public static void test()
         {
             Voiture C3 = new Voiture("Citroen C3", 15, 5.00, "Roule", "Gule", "Jeanne");
             Console.WriteLine(C3.toString());
@@ -1700,7 +1900,7 @@ namespace Semaine1
     class Serie1
     {
 
-        public void test()
+        public static void test()
         {
 
             BasicOperation(3, 4, '+');
@@ -1730,7 +1930,7 @@ namespace Semaine1
             DisplayPrimes();
 
             Console.WriteLine(Gcd(25, 10));
-            Console.ReadKey();
+           
 
 
         }
