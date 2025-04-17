@@ -19,6 +19,8 @@ namespace Gestionnaires
 
 
         public uint Id { get => _id; set => _id = value; }
+        public string Type { get => _type; set => _type = value; }
+        public int NbrTransaction { get => _nbrTransactions; set => _nbrTransactions = value; }
         public List<Compte> Comptes { get => _comptes; set => _comptes = value; }
 
 
@@ -51,7 +53,7 @@ namespace Gestionnaires
                 return false;
             }
 
-            this._comptes.Add(new Compte(id, dateDebut, solde, this._nbrTransactions));
+            this._comptes.Add(new Compte(id, dateDebut, solde, this));
 
             return true;
         }
