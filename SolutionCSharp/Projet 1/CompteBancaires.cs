@@ -16,10 +16,10 @@ namespace CompteBancaires
         public double _maxRetrait;
         public List<Transaction> _histo;
 
-        public CompteBancaire(uint id)
+        public CompteBancaire(uint id, double solde)
         {
             this._id = id;
-            this._solde = 0;
+            this._solde = solde;
             this._maxRetrait = 1000;
             this._histo = new List<Transaction> { };
         }
@@ -28,7 +28,7 @@ namespace CompteBancaires
         {
             double sumPastTransactions = 0;
 
-            List<Transaction> lastTenTransactions = this._histo.Where(t => t._compteSrc._id == this._id).Reverse().Take(10).ToList();
+            List<Transaction> lastTenTransactions = this._histo.Where(t => t._idCompteSrc == this._id).Reverse().Take(10).ToList();
 
             foreach (Transaction transaction in lastTenTransactions)
             {
@@ -47,7 +47,6 @@ namespace CompteBancaires
             return (montant > 0 && this._solde >= montant && !IsMaxRetraitReached(montant));
         }
 
-
         public bool DepotArgent(uint id, double montant)
         {
             if (!this.IsDepotArgentValid(montant))
@@ -56,7 +55,7 @@ namespace CompteBancaires
             }
 
             this._solde += montant;
-            this._histo.Add(new Transaction(id, montant, new CompteBancaire(0), this));
+            this._histo.Add(new Transaction(id, montant, 0, this._id));
             return true;
         }
 
@@ -68,7 +67,7 @@ namespace CompteBancaires
             }
 
             this._solde -= montant;
-            this._histo.Add(new Transaction(id, montant, this, new CompteBancaire(0)));
+            this._histo.Add(new Transaction(id, montant, this._id, 0));
             return true;
         }
 
@@ -81,10 +80,10 @@ namespace CompteBancaires
             }
             
             this._solde -= montant;
-            this._histo.Add(new Transaction(id, montant, this, compteDst));
+            this._histo.Add(new Transaction(id, montant, this._id, compteDst._id));
 
             compteDst._solde += montant;
-            compteDst._histo.Add(new Transaction(id, montant, this, compteDst));
+            compteDst._histo.Add(new Transaction(id, montant, this._id, compteDst._id));
 
             return true; ;
         }

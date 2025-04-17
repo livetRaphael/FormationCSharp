@@ -12,17 +12,17 @@ namespace Transactions
     {
         public uint _id;
         public double _montant;
-        public CompteBancaire _compteSrc;
-        public CompteBancaire _compteDst;
+        public uint _idCompteSrc;
+        public uint _idCompteDst;
 
         
 
-        public Transaction(uint id, double montant, CompteBancaire compteSrc, CompteBancaire compteDst)
+        public Transaction(uint id, double montant, uint idCompteSrc, uint idCompteDst)
         {
             this._id = id;
             this._montant = montant;
-            this._compteSrc = compteSrc;
-            this._compteDst = compteDst;
+            this._idCompteSrc = idCompteSrc;
+            this._idCompteDst = idCompteDst;
         }
 
 
