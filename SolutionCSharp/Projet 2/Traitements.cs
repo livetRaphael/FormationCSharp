@@ -195,9 +195,10 @@ namespace Traitements
                         statutTransactions.Demandes.Add(ligne, true);
                     }
                 }
-                catch
+                catch (Exception e)
                 {
                     statutTransactions.Demandes.Add(ligne, false);
+                    Console.WriteLine(e);
                 }
             }
             

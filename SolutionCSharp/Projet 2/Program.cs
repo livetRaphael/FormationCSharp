@@ -22,18 +22,20 @@ namespace Projet_2
             Traitement traitement = new Traitement(banque);
 
             // GESTIONNAIRES
-            string urlReaderGestionnaires = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\gestionnaires.txt";
+            string urlReaderGestionnaires = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Gestionnaires_3.txt";
             traitement.Gestionnaires(urlReaderGestionnaires);
             
+
             // COMPTES
-            string urlReaderComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\comptes.txt";
-            string urlWriterComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutOperations.txt";
+            string urlReaderComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Comptes_3.txt";
+            string urlWriterComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutOperations_3.txt";
             traitement.Comptes(urlReaderComptes, urlWriterComptes);
 
+
             // TRANSACTIONS
-            string urlReaderTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\transactions.txt";
-            string urlWriterTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutTransactions.txt";
-            string urlWriterMetrologie = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\metrologie.txt";
+            string urlReaderTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Transactions_3.txt";
+            string urlWriterTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutTransactions_3.txt";
+            string urlWriterMetrologie = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\metrologie_3.txt";
             traitement.Transactions(urlReaderTransactions, urlWriterTransactions, urlWriterMetrologie);
 
 

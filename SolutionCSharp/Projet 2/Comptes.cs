@@ -41,19 +41,17 @@ namespace Comptes
             this._histo = new List<Transaction> { };
         }
 
-        private bool IsMaxRetraitReached(double montant, DateTime date)
+        private void IsMaxRetraitReached(double montant, DateTime date)
         {
             double sumTransactions = 0;
 
             List<Transaction> NbrTransactions = this._histo.Where(t => t.IdCompteSrc == this._id).Reverse().Take(this._gestionnaire.NbrTransaction).ToList();
+            
             foreach (Transaction transaction in NbrTransactions)
             {
                 sumTransactions += transaction.Montant;
             }
-            if ((montant + sumTransactions > this._maxRetrait))
-            {
-                return true;
-            }
+            if ((montant + sumTransactions > this._maxRetrait)) { throw new Exception($"ERREUR : Montant de transaction maximum dépassé sur {this._gestionnaire.NbrTransaction} transactions"); }
 
             sumTransactions = 0;
             List<Transaction> TimeTransactions = this._histo.Where(t => t.IdCompteSrc == this._id && t.Date <= date && t.Date >= date - TimeSpan.FromDays(7)).ToList();
@@ -61,29 +59,43 @@ namespace Comptes
             {
                 sumTransactions += transaction.Montant;
             }
-            if ((montant + sumTransactions > 2000))
-            {
-                return true;
-            }
+            if ((montant + sumTransactions > 2000)) { throw new Exception("ERREUR : Montant de transaction maximum dépassé sur une semaine"); }
 
-            return false;
         }
-        private bool IsDepotArgentValid(double montant, DateTime date)
-        {
-            return (montant >= 0 && date >= this.DateDebut && (this.DateFin == null || date <= this.DateFin));
+
+        private void IsDatesValid(DateTime date) 
+        { 
+            if (date < this.DateDebut || (this.DateFin != null && date > this.DateFin))
+            {
+                throw new Exception("ERREUR : Date de transaction invalide");
+            }
         }
-        private bool IsRetirerArgentValid(double montant, DateTime date)
+        private void IsMontantValid(double montant)
         {
-            return (montant > 0 && this._solde >= montant && date >= this.DateDebut && (this.DateFin == null || date <= this.DateFin) && !IsMaxRetraitReached(montant, date));
+            if (montant < 0)
+            {
+                throw new Exception("ERREUR : Montant d'argent invalide");
+            }
+        }
+
+        private void IsDepotArgentValid(double montant, DateTime date)
+        {
+            this.IsDatesValid(date);
+            this.IsMontantValid(montant);
+        }
+
+        private void IsRetirerArgentValid(double montant, DateTime date)
+        {
+            this.IsMontantValid(montant);
+            this.IsDatesValid(date);
+            this.IsMaxRetraitReached(montant, date);
+
         }
 
 
         public void DepotArgent(uint id, DateTime date, double montant)
         {
-            if (!this.IsDepotArgentValid(montant, date))
-            {
-                throw new Exception("ERREUR : Montant d'argent à déposer invalide");
-            }
+            this.IsDepotArgentValid(montant, date);
 
             this._solde += montant;
             this._histo.Add(new Transaction(id, date, montant, 0, 0, this.Id));
@@ -91,10 +103,7 @@ namespace Comptes
 
         public void RetirerArgent(uint id, DateTime date, double montant)
         {
-            if (!this.IsRetirerArgentValid(montant, date))
-            {
-                throw new Exception("ERREUR : Montant d'argent à retirer invalide");
-            }
+            this.IsRetirerArgentValid(montant, date);
 
             this._solde -= montant;
             this._histo.Add(new Transaction(id, date, montant, 0, this.Id, 0));
@@ -102,21 +111,15 @@ namespace Comptes
 
         public void Prelevement(uint id, DateTime date, double montant, Compte compteSrc)
         {
-            if (!this.IsDepotArgentValid(montant, date))
-            {
-                throw new Exception("ERREUR : Montant d'argent à déposer invalide");
-            }
-
+            this.IsDepotArgentValid(montant, date);
+           
             compteSrc.Virement(id, date, montant, this);
         }
 
         public void Virement(uint id, DateTime date, double montant, Compte compteDst)
         {
-            
-            if (!this.IsRetirerArgentValid(montant, date))
-            {
-                throw new Exception("ERREUR : Montant d'argent à retirer invalide");
-            }
+
+            this.IsRetirerArgentValid(montant, date);
             
             this._solde -= montant;
             this._histo.Add(new Transaction(id, date, montant, 0, this.Id, compteDst.Id));
