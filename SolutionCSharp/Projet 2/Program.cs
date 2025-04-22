@@ -21,37 +21,28 @@ namespace Projet_2
             Banque banque = new Banque();
             Traitement traitement = new Traitement(banque);
 
-            // INSTANCIATION DE LA LECTURE DES FICHIERS D'ENTREE
-            Lecture readerGestionnaires = new Lecture("C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\gestionnaires.txt");
-            Lecture readerComptes = new Lecture("C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\comptes.txt");
-            Lecture readerTransactions = new Lecture("C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\transactions.txt");
-
-
-            // INSTANCIATION DE L'ECRITURE DES FICHIERS DE SORTIE
-            EcritureFile writerComptes = new EcritureFile("C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutOperations.txt");
-            EcritureFile writerTransactions = new EcritureFile("C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutTransactions.txt");
-            EcritureConsole writerConsole = new EcritureConsole(banque);
-
-
             // GESTIONNAIRES
-            traitement.Gestionnaires(readerGestionnaires);
-
-            readerGestionnaires.DisposeAndClose();
-
+            string urlReaderGestionnaires = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\gestionnaires.txt";
+            traitement.Gestionnaires(urlReaderGestionnaires);
+            
             // COMPTES
-            traitement.Comptes(readerComptes, writerComptes, writerConsole);
-            readerComptes.DisposeAndClose();
-            writerComptes.DisposeAndClose();
+            string urlReaderComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\comptes.txt";
+            string urlWriterComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutOperations.txt";
+            traitement.Comptes(urlReaderComptes, urlWriterComptes);
 
             // TRANSACTIONS
-            traitement.Transactions(readerTransactions, writerTransactions, writerConsole);
-            readerTransactions.DisposeAndClose();
-            writerTransactions.DisposeAndClose();
+            string urlReaderTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\transactions.txt";
+            string urlWriterTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutTransactions.txt";
+            traitement.Transactions(urlReaderTransactions, urlWriterTransactions);
 
 
             Console.ReadKey();
         }
     }
+
+
+
+    
 
 
 

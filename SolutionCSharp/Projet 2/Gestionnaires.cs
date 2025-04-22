@@ -21,6 +21,7 @@ namespace Gestionnaires
         public uint Id { get => _id; set => _id = value; }
         public string Type { get => _type; set => _type = value; }
         public int NbrTransaction { get => _nbrTransactions; set => _nbrTransactions = value; }
+        public double FraisTot { get => _fraisTot; set => _fraisTot = value; }
         public List<Compte> Comptes { get => _comptes; set => _comptes = value; }
 
 
@@ -88,7 +89,7 @@ namespace Gestionnaires
             {
                 return false;
             }
-
+            
             this.Comptes.Remove(this.CompteFromIdCompte(idCompte));
 
             return true;
@@ -105,6 +106,7 @@ namespace Gestionnaires
                 return false;
             }
 
+            gestionnaireEmetteur.CompteFromIdCompte(idCompte).Gestionnaire = this;
             this.Comptes.Add(gestionnaireEmetteur.CompteFromIdCompte(idCompte));
             
             return true;

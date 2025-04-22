@@ -15,8 +15,9 @@ namespace Banques
     class Banque
     {
 
+        private List<Gestionnaire> _gestionnaires = new List<Gestionnaire> { };
 
-        public List<Gestionnaire> _gestionnaires = new List<Gestionnaire> { };
+        public List<Gestionnaire> Gestionnaires { get => _gestionnaires; set => _gestionnaires = value; }
 
         public bool IsGestionnaireAlreadyExistFromIdGestionnaire(uint idGestionnaire)
         {

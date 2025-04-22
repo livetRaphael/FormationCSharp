@@ -132,6 +132,7 @@ namespace Comptes
             double frais = CalculerFrais(montant, this._gestionnaire, compteDst._gestionnaire);
             compteDst._solde += montant - frais;
             compteDst._histo.Add(new Transaction(id, date, montant, frais, this.Id, compteDst.Id));
+            compteDst._gestionnaire.FraisTot += frais;
 
             return true; ;
         }

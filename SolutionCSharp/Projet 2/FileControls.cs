@@ -63,16 +63,18 @@ namespace FileControls
             this._writer = new StreamWriter(this._fileStream);
         }
 
-        public void WriteLineStatutTransaction(string demande, bool statut)
+        public void WriteLine(string demande, bool statut)
         {
             string labelStatut = statut ? "OK" : "KO";
             this._writer.WriteLine($"{demande};{labelStatut}");
         }
 
-        public void WriteLineStatutCompte(string demande, bool statut)
+        public void WriteAllStatutsResults(Statuts statut)
         {
-            string labelStatut = statut ? "OK" : "KO";
-            this._writer.WriteLine($"{demande};{labelStatut}");
+            foreach (KeyValuePair<string, bool> demande in statut.Demandes)
+            {
+                this.WriteLine(demande.Key, demande.Value);
+            }
         }
 
 
@@ -88,29 +90,134 @@ namespace FileControls
 
     class EcritureConsole
     {
-        private Banque _banque;
 
-        public EcritureConsole(Banque banque)
+        public void WriteLine(string demande, bool statut)
         {
-            this._banque = banque;
-        }
-
-
-        public void WriteLineTransaction(string demande, bool statut)
-        {
-            string labelStatut = statut ? "OK" : "KO";
-
-            Console.WriteLine($"{demande};{labelStatut}");
-        }
-
-        public void WriteLineCompte(string demande, bool statut)
-        {
-            string labelStatut = statut ? "OK" : "KO";
             
-            Console.WriteLine($"{demande};{labelStatut}");
+        }
+
+        public void WriteAllStatutsResults(Statuts statut)
+        {
+            Console.WriteLine();
+            foreach (KeyValuePair<string, bool> demande in statut.Demandes)
+            {
+                string labelStatut = demande.Value ? "OK" : "KO";
+                Console.WriteLine($"{demande.Key};{labelStatut}");
+            }
+        }
+
+        public void WriteMetrologie(Metrologie metro)
+        {
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine("Statistique :");
+            Console.WriteLine($"Nombre de comptes : {metro.NbrComptes}");
+            Console.WriteLine($"Nombre de transactions : {metro.NbrTransactions}");
+            Console.WriteLine($"Nombre de réussites : {metro.NbrReussites}");
+            Console.WriteLine($"Nombre d'échecs : {metro.NbrEchecs}");
+            Console.WriteLine($"Montant total des réussites : {metro.MontantReussites} euros");
+            Console.WriteLine();
+
+            Console.WriteLine("Frais de gestion :");
+            foreach (KeyValuePair<uint, double> gestionnaire in metro.Frais)
+            {
+                Console.WriteLine($"{gestionnaire.Key} : {gestionnaire.Value} euros");
+            }
+        }
+
+
+    }
+
+
+    class Statuts
+    {
+        private Dictionary<string, bool> _demandes;
+
+        public Dictionary<string, bool> Demandes { get => _demandes; set => _demandes = value; }
+    
+        public Statuts()
+        {
+            this._demandes = new Dictionary<string, bool> { };
         }
     }
 
+    class Metrologie
+    {
+        private int _nbrComptes;
+        private int _nbrTransactions;
+        private int _nbrReussites;
+        private int _nbrEchecs;
+        private double _montantReussites;
+        private Dictionary<uint, double> _frais;
+
+        public int NbrComptes { get => _nbrComptes; set => _nbrComptes = value; }
+        public int NbrTransactions { get => _nbrTransactions; set => _nbrTransactions = value; }
+        public int NbrReussites { get => _nbrReussites; set => _nbrReussites = value; }
+        public int NbrEchecs { get => _nbrEchecs; set => _nbrEchecs = value; }
+        public double MontantReussites { get => _montantReussites; set => _montantReussites = value; }
+        public Dictionary<uint, double> Frais { get => _frais; set => _frais = value; }
+
+
+        public Metrologie(Banque banque, Statuts statutTransactions)
+        {
+            this._nbrComptes = CountAllComptes(banque);
+            this._nbrTransactions = CountAllTransactions(statutTransactions);
+            this._nbrReussites = CountAllTransactionsReussites(statutTransactions);
+            this._nbrEchecs = CountAllTransactionsEchecs(statutTransactions);
+            this._montantReussites = SumTotMontantReussites(statutTransactions);
+            this._frais = FraisGestionPerGestionnaire(banque);
+        }
+
+
+
+
+        public int CountAllComptes(Banque banque)
+        {
+            return banque.Gestionnaires.Select(g => g.Comptes.Count).Sum();
+        }
+
+        public int CountAllTransactions(Statuts statutTransactions)
+        {
+            return statutTransactions.Demandes.Count();
+        }
+
+        public int CountAllTransactionsReussites(Statuts statutTransactions)
+        {
+            return statutTransactions.Demandes.Count(d => d.Value == true);
+        }
+
+        public int CountAllTransactionsEchecs(Statuts statutTransactions)
+        {
+            return statutTransactions.Demandes.Count(d => d.Value == false);
+        }
+
+        public double SumTotMontantReussites(Statuts statutTransactions)
+        {
+            List<KeyValuePair<string, bool>> statutReussites = statutTransactions.Demandes.Where(d => d.Value == true).ToList();
+            // On recupère et somme tous les montants
+            double sum = 0;
+            double mtt;
+            foreach(KeyValuePair<string, bool> s in statutReussites)
+            {
+                double.TryParse(s.Key.Split(';')[2], out mtt);
+                sum += mtt;
+            }
+            return sum;
+        }
+
+        public Dictionary<uint, double> FraisGestionPerGestionnaire(Banque banque)
+        {
+            Dictionary<uint, double> result = new Dictionary<uint, double> { };
+            List<uint> idGestionnaires = banque.Gestionnaires.Select(g => g.Id).ToList();
+
+            for (int i = 0; i < idGestionnaires.Count(); i++)
+            { 
+                 result.Add(idGestionnaires[i], banque.GestionnaireFromIdGestionnaire(idGestionnaires[i]).FraisTot);
+            }
+            return result;
+        }
+
+    }
 
 
 }
