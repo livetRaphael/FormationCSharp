@@ -33,7 +33,8 @@ namespace Projet_2
             // TRANSACTIONS
             string urlReaderTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\transactions.txt";
             string urlWriterTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutTransactions.txt";
-            traitement.Transactions(urlReaderTransactions, urlWriterTransactions);
+            string urlWriterMetrologie = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\metrologie.txt";
+            traitement.Transactions(urlReaderTransactions, urlWriterTransactions, urlWriterMetrologie);
 
 
             Console.ReadKey();

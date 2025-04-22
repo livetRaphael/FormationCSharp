@@ -95,10 +95,11 @@ namespace Traitements
         }
 
 
-        public void Transactions(string urlReader, string urlWriter)
+        public void Transactions(string urlReader, string urlWriter, string urlMetrologie)
         {
             Lecture readerTransactions = new Lecture(urlReader);
             EcritureFile writerTransactions = new EcritureFile(urlWriter);
+            EcritureFile writerMetrologie = new EcritureFile(urlMetrologie);
             EcritureConsole writerConsole = new EcritureConsole();
 
             string[] splitLigne = new string[] { };
@@ -138,12 +139,14 @@ namespace Traitements
                 writerConsole.WriteAllStatutsResults(statutTransactions);
 
                 Metrologie metro = new Metrologie(this._banque, statutTransactions);
-                writerConsole.WriteMetrologie(metro);
+                writerMetrologie.WriteTransactionsMetrologie(metro);
+                writerConsole.WriteTransactionsMetrologie(metro);
             }
             finally
             {
                 readerTransactions.DisposeAndClose();
                 writerTransactions.DisposeAndClose();
+                writerMetrologie.DisposeAndClose();
             }
 
 

@@ -65,18 +65,35 @@ namespace FileControls
 
         public void WriteLine(string demande, bool statut)
         {
-            string labelStatut = statut ? "OK" : "KO";
-            this._writer.WriteLine($"{demande};{labelStatut}");
+            
         }
 
         public void WriteAllStatutsResults(Statuts statut)
         {
             foreach (KeyValuePair<string, bool> demande in statut.Demandes)
             {
-                this.WriteLine(demande.Key, demande.Value);
+                string labelStatut = demande.Value ? "OK" : "KO";
+                this._writer.WriteLine($"{demande.Key};{labelStatut}");
             }
         }
 
+        public void WriteTransactionsMetrologie(Metrologie metro)
+        {
+
+            this._writer.WriteLine("Statistique :");
+            this._writer.WriteLine($"Nombre de comptes : {metro.NbrComptes}");
+            this._writer.WriteLine($"Nombre de transactions : {metro.NbrTransactions}");
+            this._writer.WriteLine($"Nombre de réussites : {metro.NbrReussites}");
+            this._writer.WriteLine($"Nombre d'échecs : {metro.NbrEchecs}");
+            this._writer.WriteLine($"Montant total des réussites : {metro.MontantReussites} euros");
+            this._writer.WriteLine();
+
+            this._writer.WriteLine("Frais de gestion :");
+            foreach (KeyValuePair<uint, double> gestionnaire in metro.Frais)
+            {
+                this._writer.WriteLine($"{gestionnaire.Key} : {gestionnaire.Value} euros");
+            }
+        }
 
         public void DisposeAndClose()
         {
@@ -91,11 +108,6 @@ namespace FileControls
     class EcritureConsole
     {
 
-        public void WriteLine(string demande, bool statut)
-        {
-            
-        }
-
         public void WriteAllStatutsResults(Statuts statut)
         {
             Console.WriteLine();
@@ -106,7 +118,7 @@ namespace FileControls
             }
         }
 
-        public void WriteMetrologie(Metrologie metro)
+        public void WriteTransactionsMetrologie(Metrologie metro)
         {
             Console.WriteLine();
             Console.WriteLine();
@@ -167,9 +179,6 @@ namespace FileControls
             this._montantReussites = SumTotMontantReussites(statutTransactions);
             this._frais = FraisGestionPerGestionnaire(banque);
         }
-
-
-
 
         public int CountAllComptes(Banque banque)
         {
