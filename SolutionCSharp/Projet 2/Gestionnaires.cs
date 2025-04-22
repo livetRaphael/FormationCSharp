@@ -47,69 +47,56 @@ namespace Gestionnaires
         }
 
 
-        public bool CreationCompte(uint id, DateTime dateDebut, double solde)
+        public void CreationCompte(uint id, DateTime dateDebut, double solde)
         {
             if (this.IsCompteAlreadyExist(id))
             {
-                return false;
+                throw new Exception("ERREUR : Compte déjà existant");
             }
 
             this._comptes.Add(new Compte(id, dateDebut, solde, this));
-
-            return true;
         }
 
-        public bool ClotureCompte(uint idCompte, DateTime dateFin)
+        public void ClotureCompte(uint idCompte, DateTime dateFin)
         {
             if (!this.IsCompteAlreadyExist(idCompte))
             {
-                return false;
+                throw new Exception("ERREUR : Compte non existant");
             }
             if (!this.IsCompteActif(idCompte, dateFin))
             {
-                return false;
+                throw new Exception("ERREUR : Compte non actif");
             }
             this.CompteFromIdCompte(idCompte).DateFin = dateFin;
 
-            return true;
         }
 
-        public bool CessionCompte(uint idCompte, DateTime date, Gestionnaire gestionnaireCible)
+        public void CessionCompte(uint idCompte, DateTime date, Gestionnaire gestionnaireCible)
         {
             if (!this.IsCompteAlreadyExist(idCompte))
             {
-                return false;
+                throw new Exception("ERREUR : Compte non existant chez le gestionnaire emetteur");
             }
             if (!this.IsCompteActif(idCompte, date))
             {
-                return false;
+                throw new Exception("ERREUR : Compte non actif");
             }
 
-            if (!gestionnaireCible.ReceptionCompte(idCompte, date, this))
-            {
-                return false;
-            }
-            
+            gestionnaireCible.ReceptionCompte(idCompte, date, this);
             this.Comptes.Remove(this.CompteFromIdCompte(idCompte));
 
-            return true;
         }
 
-        public bool ReceptionCompte(uint idCompte, DateTime date, Gestionnaire gestionnaireEmetteur)
+        public void ReceptionCompte(uint idCompte, DateTime date, Gestionnaire gestionnaireEmetteur)
         {
-            if (!gestionnaireEmetteur.IsCompteAlreadyExist(idCompte))
+            if (this.IsCompteAlreadyExist(idCompte))
             {
-                return false;
-            }
-            if (!gestionnaireEmetteur.IsCompteActif(idCompte, date))
-            {
-                return false;
+                throw new Exception("ERREUR : Compte déjà existant chez le gestionnaire receveur");
             }
 
             gestionnaireEmetteur.CompteFromIdCompte(idCompte).Gestionnaire = this;
             this.Comptes.Add(gestionnaireEmetteur.CompteFromIdCompte(idCompte));
             
-            return true;
         }
 
         public Compte CompteFromIdCompte(uint idCompte)

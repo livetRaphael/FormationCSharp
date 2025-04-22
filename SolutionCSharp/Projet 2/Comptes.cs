@@ -68,7 +68,6 @@ namespace Comptes
 
             return false;
         }
-
         private bool IsDepotArgentValid(double montant, DateTime date)
         {
             return (montant >= 0 && date >= this.DateDebut && (this.DateFin == null || date <= this.DateFin));
@@ -79,50 +78,44 @@ namespace Comptes
         }
 
 
-        public bool DepotArgent(uint id, DateTime date, double montant)
+        public void DepotArgent(uint id, DateTime date, double montant)
         {
             if (!this.IsDepotArgentValid(montant, date))
             {
-                return false;
+                throw new Exception("ERREUR : Montant d'argent à déposer invalide");
             }
 
             this._solde += montant;
             this._histo.Add(new Transaction(id, date, montant, 0, 0, this.Id));
-            return true;
         }
 
-        public bool RetirerArgent(uint id, DateTime date, double montant)
+        public void RetirerArgent(uint id, DateTime date, double montant)
         {
             if (!this.IsRetirerArgentValid(montant, date))
             {
-                return false;
+                throw new Exception("ERREUR : Montant d'argent à retirer invalide");
             }
 
             this._solde -= montant;
             this._histo.Add(new Transaction(id, date, montant, 0, this.Id, 0));
-            return true;
         }
 
-        public bool Prelevement(uint id, DateTime date, double montant, Compte compteSrc)
+        public void Prelevement(uint id, DateTime date, double montant, Compte compteSrc)
         {
             if (!this.IsDepotArgentValid(montant, date))
             {
-                return false;
+                throw new Exception("ERREUR : Montant d'argent à déposer invalide");
             }
 
-            if (!compteSrc.Virement(id, date, montant, this))
-            {
-                return false;
-            }
-            return true;
+            compteSrc.Virement(id, date, montant, this);
         }
 
-        public bool Virement(uint id, DateTime date, double montant, Compte compteDst)
+        public void Virement(uint id, DateTime date, double montant, Compte compteDst)
         {
             
             if (!this.IsRetirerArgentValid(montant, date))
             {
-                return false;
+                throw new Exception("ERREUR : Montant d'argent à retirer invalide");
             }
             
             this._solde -= montant;
@@ -134,7 +127,6 @@ namespace Comptes
             compteDst._histo.Add(new Transaction(id, date, montant, frais, this.Id, compteDst.Id));
             compteDst._gestionnaire.FraisTot += frais;
 
-            return true; ;
         }
 
         public double CalculerFrais(double montant, Gestionnaire gestionnaireCompteSrc, Gestionnaire gestionnaireCompteDst)

@@ -36,11 +36,6 @@ namespace FileControls
             ;
         }
 
-        public DateTime StringToDateTime(string date)
-        {
-            return new DateTime(int.Parse(date.Substring(6, 4)), int.Parse(date.Substring(3, 2)), int.Parse(date.Substring(0, 2)));
-        }
-
         public void DisposeAndClose()
         {
             this._fileStream.Dispose();

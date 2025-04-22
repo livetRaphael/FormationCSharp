@@ -26,9 +26,10 @@ namespace Traitements
             Lecture readerGestionnaires = new Lecture(urlReader);
             string[] splitLigne = new string[] { };
 
-            try
+
+            while (readerGestionnaires.LireLigne(ref splitLigne))
             {
-                while (readerGestionnaires.LireLigne(ref splitLigne))
+                try
                 {
                     uint idTransaction = uint.Parse(splitLigne[0]);
                     string type = splitLigne[1];
@@ -36,11 +37,14 @@ namespace Traitements
 
                     this._banque.CreationGestionnaire(idTransaction, type, nbrTransactionMaxRetrait);
                 }
+                catch
+                {
+
+                }
             }
-            finally
-            {
-                readerGestionnaires.DisposeAndClose();
-            }
+            
+            readerGestionnaires.DisposeAndClose();
+            
 
         }
 
@@ -52,47 +56,80 @@ namespace Traitements
             EcritureConsole writerConsole = new EcritureConsole();
 
             string[] splitLigne = new string[] { };
+            string ligne = "";
             Statuts statutComptes = new Statuts();
 
-            try
+            while (readerComptes.LireLigne(ref splitLigne))
             {
-                while (readerComptes.LireLigne(ref splitLigne))
+                try
                 {
-                    string ligne = string.Join(";", splitLigne);
+                    ligne = string.Join(";", splitLigne);
 
-                    uint idCompte = uint.Parse(splitLigne[0]);
-                    DateTime date = readerComptes.StringToDateTime(splitLigne[1]);
-                    double solde = (splitLigne[2] != "") ? double.Parse(splitLigne[2], CultureInfo.InvariantCulture) : 0;
-                    uint idEntree = (splitLigne[3] != "") ? uint.Parse(splitLigne[3]) : 0;
-                    uint idSortie = (splitLigne[4] != "") ? uint.Parse(splitLigne[4]) : 0;
+                    if (splitLigne.Count() != 5) { throw new Exception($"ERREUR : Nombre d'élément d'opération sur compte incorrect. Il faut 4 éléments et il y en a {splitLigne.Count()}"); }
 
+                    uint idCompte = 0;
+                    if (!uint.TryParse(splitLigne[0], out idCompte)) { throw new Exception("ERREUR : Formatage id compte"); }
+
+                    DateTime date = new DateTime();
+                    if (!DateTime.TryParse(splitLigne[1], out date)) { throw new Exception("ERREUR : Formatage date compte"); }
+
+                    double solde = 0;
+                    if (!double.TryParse(splitLigne[2], out solde))
+                    {
+                        if (splitLigne[2] != "") { throw new Exception("ERREUR : Formatage solde initial compte"); }
+                    }
+
+                    uint idEntree = 0;
+                    if (!uint.TryParse(splitLigne[3], out idEntree))
+                    {
+                        if (splitLigne[3] != "") { throw new Exception("ERREUR : Formatage id gestionnaire entrée"); }
+                    }
+
+                    uint idSortie = 0;
+                    if (!uint.TryParse(splitLigne[4], out idSortie))
+                    {
+                        if (splitLigne[4] != "") { throw new Exception("ERREUR : Formatage id gestionnaire sortie"); }
+                    }
 
                     // CAS : CREATION DE COMPTE
                     if (idSortie == 0)
                     {
-                        statutComptes.Demandes.Add(ligne, (this._banque.IsGestionnaireAlreadyExistFromIdGestionnaire(idEntree)) ? this._banque.GestionnaireFromIdGestionnaire(idEntree).CreationCompte(idCompte, date, solde) : false);
+                        if (!this._banque.IsGestionnaireAlreadyExistFromIdGestionnaire(idEntree)) { throw new Exception("ERREUR : Id gestionnaire n'existe pas"); }
+
+                        this._banque.GestionnaireFromIdGestionnaire(idEntree).CreationCompte(idCompte, date, solde);
+                        statutComptes.Demandes.Add(ligne, true);
                     }
                     // CAS : CLOTURE DE COMPTE
                     else if (idEntree == 0)
                     {
-                        statutComptes.Demandes.Add(ligne, (this._banque.IsGestionnaireAlreadyExistFromIdGestionnaire(idSortie)) ? this._banque.GestionnaireFromIdGestionnaire(idSortie).ClotureCompte(idCompte, date) : false);
+                        if (!this._banque.IsGestionnaireAlreadyExistFromIdGestionnaire(idSortie)) { throw new Exception("ERREUR : Id gestionnaire n'existe pas"); }
+                        this._banque.GestionnaireFromIdGestionnaire(idSortie).ClotureCompte(idCompte, date);
+                        statutComptes.Demandes.Add(ligne, true);
                     }
                     // CAS : ECHANGE DE COMPTE
                     else
                     {
-                        statutComptes.Demandes.Add(ligne, (this._banque.IsGestionnaireAlreadyExistFromIdGestionnaire(idEntree) && this._banque.IsGestionnaireAlreadyExistFromIdGestionnaire(idSortie)) ? this._banque.GestionnaireFromIdGestionnaire(idEntree).CessionCompte(idCompte, date, this._banque.GestionnaireFromIdGestionnaire(idSortie)) : false);
+                        if (!(this._banque.IsGestionnaireAlreadyExistFromIdGestionnaire(idEntree) && this._banque.IsGestionnaireAlreadyExistFromIdGestionnaire(idSortie))) { throw new Exception("ERREUR : Id gestionnaire du receveur ou de l'emetteur n'existe pas"); }
+                        
+                        this._banque.GestionnaireFromIdGestionnaire(idEntree).CessionCompte(idCompte, date, this._banque.GestionnaireFromIdGestionnaire(idSortie));
+                        statutComptes.Demandes.Add(ligne, true);
                     }
                 }
+                catch
+                {
+                    statutComptes.Demandes.Add(ligne, false);
+                }
 
-                writerComptes.WriteAllStatutsResults(statutComptes);
-                writerConsole.WriteAllStatutsResults(statutComptes);
+
             }
-            finally
-            {
-                readerComptes.DisposeAndClose();
-                writerComptes.DisposeAndClose();
-            }
-        }
+
+            writerComptes.WriteAllStatutsResults(statutComptes);
+            writerConsole.WriteAllStatutsResults(statutComptes);
+            readerComptes.DisposeAndClose();
+            writerComptes.DisposeAndClose();
+        } 
+            
+        
 
 
         public void Transactions(string urlReader, string urlWriter, string urlMetrologie)
@@ -103,51 +140,79 @@ namespace Traitements
             EcritureConsole writerConsole = new EcritureConsole();
 
             string[] splitLigne = new string[] { };
+            string ligne = "";
             Statuts statutTransactions = new Statuts();
 
-            try
+            
+            while (readerTransactions.LireLigne(ref splitLigne))
             {
-                while (readerTransactions.LireLigne(ref splitLigne))
-            {
-                string ligne = string.Join(";", splitLigne);
+                try
+                {
+                    ligne = string.Join(";", splitLigne);
 
-                uint idTransaction = uint.Parse(splitLigne[0]);
-                DateTime date = readerTransactions.StringToDateTime(splitLigne[1]);
-                double montant = double.Parse(splitLigne[2], CultureInfo.InvariantCulture);
-                uint idCompteSrc = uint.Parse(splitLigne[3]);
-                uint idCompteDst = uint.Parse(splitLigne[4]);
+                    if (splitLigne.Count() != 5) { throw new Exception($"ERREUR : Nombre d'élément de transaction incorrect. Il faut 5 éléments et il y en a {splitLigne.Count()}"); }
 
-                
-                // Cas DEPOT
-                if (idCompteSrc == 0)
-                {
-                    statutTransactions.Demandes.Add(ligne, (this._banque.IsGestionnaireAlreadyExistFromIdCompte(idCompteDst)) ? this._banque.GestionnaireFromIdCompte(idCompteDst).CompteFromIdCompte(idCompteDst).DepotArgent(idTransaction, date, montant) : false);
+
+                    uint idTransaction = 0;
+                    if (!uint.TryParse(splitLigne[0], out idTransaction)) { throw new Exception("ERREUR : Formatage id transaction incorrect"); }
+
+                    DateTime date = new DateTime();
+                    if (!DateTime.TryParse(splitLigne[1], out date)) { throw new Exception("ERREUR : Formatage date transaction incorrect"); }
+
+                    double montant = 0;
+                    if (!double.TryParse(splitLigne[2], out montant)) { throw new Exception("ERREUR : Formatage montant transaction incorrect"); }
+
+                    uint idCompteSrc = 0;
+                    if (!uint.TryParse(splitLigne[3], out idCompteSrc)) { throw new Exception("ERREUR : Formatage id compte source transaction incorrect"); }
+
+                    uint idCompteDst = 0;
+                    if (!uint.TryParse(splitLigne[4], out idCompteDst)) { throw new Exception("ERREUR : Formatage id compte destination transaction incorrect"); }
+
+                    // Cas DEPOT
+                    if (idCompteSrc == 0)
+                    {
+                        if (!this._banque.IsGestionnaireAlreadyExistFromIdCompte(idCompteDst)) { throw new Exception("ERREUR : Id compte destinataire n'existe pas ou n'est associé à aucun gestionnaire"); }
+                        
+                        this._banque.GestionnaireFromIdCompte(idCompteDst).CompteFromIdCompte(idCompteDst).DepotArgent(idTransaction, date, montant);
+                        statutTransactions.Demandes.Add(ligne, true);
+                    }
+
+                    // Cas RETRAIT
+                    else if (idCompteDst == 0)
+                    {
+                        if (!this._banque.IsGestionnaireAlreadyExistFromIdCompte(idCompteSrc)) { throw new Exception("ERREUR : Id compte source n'existe pas ou n'est associé à aucun gestionnaire"); }
+
+                        this._banque.GestionnaireFromIdCompte(idCompteSrc).CompteFromIdCompte(idCompteSrc).RetirerArgent(idTransaction, date, montant);
+                        statutTransactions.Demandes.Add(ligne, true);
+                    }
+
+                    // Cas PRELEVEMENT/VIREMENT
+                    else
+                    {
+                        if (!(this._banque.IsGestionnaireAlreadyExistFromIdCompte(idCompteSrc) && this._banque.IsGestionnaireAlreadyExistFromIdCompte(idCompteDst))) { throw new Exception("ERREUR : Id compte source ou id compte destinataire n'existe pas ou n'est associé à aucun gestionnaire"); }
+                        
+                        this._banque.GestionnaireFromIdCompte(idCompteDst).CompteFromIdCompte(idCompteDst).Prelevement(idTransaction, date, montant, this._banque.GestionnaireFromIdCompte(idCompteSrc).CompteFromIdCompte(idCompteSrc));
+                        statutTransactions.Demandes.Add(ligne, true);
+                    }
                 }
-                // Cas RETRAIT
-                else if (idCompteDst == 0)
+                catch
                 {
-                    statutTransactions.Demandes.Add(ligne, (this._banque.IsGestionnaireAlreadyExistFromIdCompte(idCompteSrc)) ? this._banque.GestionnaireFromIdCompte(idCompteSrc).CompteFromIdCompte(idCompteSrc).RetirerArgent(idTransaction, date, montant) : false);
-                }
-                // Cas PRELEVEMENT/VIREMENT
-                else
-                {
-                    statutTransactions.Demandes.Add(ligne, (this._banque.IsGestionnaireAlreadyExistFromIdCompte(idCompteSrc) && this._banque.IsGestionnaireAlreadyExistFromIdCompte(idCompteDst)) ? this._banque.GestionnaireFromIdCompte(idCompteDst).CompteFromIdCompte(idCompteDst).Prelevement(idTransaction, date, montant, this._banque.GestionnaireFromIdCompte(idCompteSrc).CompteFromIdCompte(idCompteSrc)) : false);
+                    statutTransactions.Demandes.Add(ligne, false);
                 }
             }
+            
+            
+            writerTransactions.WriteAllStatutsResults(statutTransactions);
+            writerConsole.WriteAllStatutsResults(statutTransactions);
 
-                writerTransactions.WriteAllStatutsResults(statutTransactions);
-                writerConsole.WriteAllStatutsResults(statutTransactions);
+            Metrologie metro = new Metrologie(this._banque, statutTransactions);
+            writerMetrologie.WriteTransactionsMetrologie(metro);
+            writerConsole.WriteTransactionsMetrologie(metro);
 
-                Metrologie metro = new Metrologie(this._banque, statutTransactions);
-                writerMetrologie.WriteTransactionsMetrologie(metro);
-                writerConsole.WriteTransactionsMetrologie(metro);
-            }
-            finally
-            {
-                readerTransactions.DisposeAndClose();
-                writerTransactions.DisposeAndClose();
-                writerMetrologie.DisposeAndClose();
-            }
+            readerTransactions.DisposeAndClose();
+            writerTransactions.DisposeAndClose();
+            writerMetrologie.DisposeAndClose();
+            
 
 
 }
