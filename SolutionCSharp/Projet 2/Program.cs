@@ -22,22 +22,23 @@ namespace Projet_2
             Traitement traitement = new Traitement(banque);
 
             // GESTIONNAIRES
-            string urlReaderGestionnaires = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Gestionnaires_3.txt";
+            string urlReaderGestionnaires = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Gestionnaires_6.txt";
             traitement.Gestionnaires(urlReaderGestionnaires);
             
 
             // COMPTES
-            string urlReaderComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Comptes_3.txt";
-            string urlWriterComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutOperations_3.txt";
-            traitement.Comptes(urlReaderComptes, urlWriterComptes);
+            string urlReaderComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Comptes_6.txt";
+            string urlWriterComptes = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutOperations_6.txt";
+            //traitement.Comptes(urlReaderComptes, urlWriterComptes);
 
 
             // TRANSACTIONS
-            string urlReaderTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Transactions_3.txt";
-            string urlWriterTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutTransactions_3.txt";
-            string urlWriterMetrologie = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\metrologie_3.txt";
-            traitement.Transactions(urlReaderTransactions, urlWriterTransactions, urlWriterMetrologie);
+            string urlReaderTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\Transactions_6.txt";
+            string urlWriterTransactions = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\statutTransactions_6.txt";
+            string urlWriterMetrologie = "C:\\Users\\Formation\\source\\repos\\livetRaphael\\Projet_2\\metrologie_6.txt";
+            //traitement.Transactions(urlReaderTransactions, urlWriterTransactions, urlWriterMetrologie);
 
+            traitement.ComptesTransactions(urlReaderComptes, urlWriterComptes, urlReaderTransactions, urlWriterTransactions, urlWriterMetrologie);
 
             Console.ReadKey();
         }

@@ -54,7 +54,7 @@ namespace Comptes
             if ((montant + sumTransactions > this._maxRetrait)) { throw new Exception($"ERREUR : Montant de transaction maximum dépassé sur {this._gestionnaire.NbrTransaction} transactions"); }
 
             sumTransactions = 0;
-            List<Transaction> TimeTransactions = this._histo.Where(t => t.IdCompteSrc == this._id && t.Date <= date && t.Date >= date - TimeSpan.FromDays(7)).ToList();
+            List<Transaction> TimeTransactions = this._histo.Where(t => t.IdCompteSrc == this._id && t.Date <= date && t.Date > date - TimeSpan.FromDays(7)).ToList();
             foreach (Transaction transaction in TimeTransactions)
             {
                 sumTransactions += transaction.Montant;

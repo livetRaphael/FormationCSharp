@@ -16,24 +16,30 @@ namespace FileControls
     {
         private FileStream _fileStream;
         private TextReader _reader;
+        private bool _isOver;
+
+        public bool IsOver { get => _isOver; set => _isOver = value; }
 
         public Lecture(string inputUrl)
         {
             this._fileStream = File.OpenRead(inputUrl);
             this._reader = new StreamReader(this._fileStream);
+            this._isOver = false;
         }
 
-        public bool LireLigne(ref string[] splitLigne)
+
+        public void LireLigne(ref string[] splitLigne)
         {
             string ligne = "";
             if (!((ligne = this._reader.ReadLine()) != null && ligne != string.Empty))
             {
-                return false;
+                this._isOver = true;
             }
-
-            splitLigne = ligne.Split(';');
-            return true;
-            ;
+            else
+            {
+                splitLigne = ligne.Split(';');
+            }
+            
         }
 
         public void DisposeAndClose()
