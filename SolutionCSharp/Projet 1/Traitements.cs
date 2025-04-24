@@ -33,7 +33,7 @@ namespace Traitements
             }
         }
 
-        public void Transaction(Lecture lecteurTransactions, EcritureFile writerFile, EcritureConsole writerConsole)
+        public void Transactions(Lecture lecteurTransactions, EcritureFile writerFile, EcritureConsole writerConsole)
         {
             string[] splitLigne = new string[] { };
             writerConsole.WriteLineLabelTransaction();

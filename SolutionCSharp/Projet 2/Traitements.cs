@@ -48,11 +48,6 @@ namespace Traitements
             {
                 try
                 {
-                    string[] splitLigneTemp = new string[] { };
-                    DateTime dateCompte;
-                    DateTime dateTransaction;
-                    if (!DateTime.TryParse(splitLigneCompte[1], out dateCompte)) { throw new Exception("ERREUR : Formatage date compte"); }
-                    if (!DateTime.TryParse(splitLigneTransaction[1], out dateTransaction)) { throw new Exception("ERREUR : Formatage date transaction"); }
 
                     if (readerComptes.IsOver)
                     {
@@ -66,6 +61,11 @@ namespace Traitements
                     }
                     else
                     {
+                        DateTime dateCompte;
+                        DateTime dateTransaction;
+                        if (!DateTime.TryParse(splitLigneCompte[1], out dateCompte)) { throw new Exception("ERREUR : Formatage date compte"); }
+                        if (!DateTime.TryParse(splitLigneTransaction[1], out dateTransaction)) { throw new Exception("ERREUR : Formatage date transaction"); }
+
                         if (dateCompte <= dateTransaction)
                         {
                             this.Compte(splitLigneCompte, statutComptes);

@@ -31,7 +31,7 @@ namespace Projet_1
             // COMPTES
             traitement.Comptes(readerComptes);
             // TRANSACTIONS
-            traitement.Transaction(readerTransactions, writerFile, writerConsole);
+            traitement.Transactions(readerTransactions, writerFile, writerConsole);
 
 
             writerFile.DisposeAndClose();
