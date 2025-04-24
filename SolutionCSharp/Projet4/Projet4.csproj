@@ -6,4 +6,14 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="malkha-plat-marocain.jpg" />
+    <None Remove="Un-plat-familial-en-sauce-comme-chez-mamie.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="malkha-plat-marocain.jpg" />
+    <Resource Include="Un-plat-familial-en-sauce-comme-chez-mamie.jpg" />
+  </ItemGroup>
+
 </Project>

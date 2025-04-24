@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Drawing;
 
 namespace Projet4
 {
@@ -20,9 +21,36 @@ namespace Projet4
     /// </summary>
     public partial class MainWindow : Window
     {
+
+
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private ImageBrush TransformUrlToBrush(string url)
+        {
+            ImageBrush brush = new ImageBrush();
+            brush.ImageSource = new BitmapImage(new Uri(url));
+            brush.Stretch = Stretch.Fill;
+            return brush;
+        }
+        public void ChangePictures()
+        {
+            btnRight.Background = TransformUrlToBrush("ms-appx:///Assets/Un-plat-familial-en-sauce-comme-chez-mamie.jpg");
+           
+            btnLeft.Background = TransformUrlToBrush("ms-appx:///Assets/malkha-plat-marocain.jpg");
+        }
+
+        private void btnLeft_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Click");
+            ChangePictures();
+        }
+
+        private void btnRight_Click(object sender, RoutedEventArgs e)
+        {
+            ChangePictures();
         }
     }
 }
